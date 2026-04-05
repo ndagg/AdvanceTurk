@@ -1,0 +1,5 @@
+bs4>=0.0.2
+matplotlib>=3.10.8
+networkx>=3.4.2
+numpy>=2.2.6
+selenium>=4.41.0
