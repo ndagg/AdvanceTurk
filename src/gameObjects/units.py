@@ -5,73 +5,61 @@ Created on Fri May 23 20:59:29 2025
 @author: ndagg
 """
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
-from src.gameUtils.aw_lists import (
-    A_INF,
-    A_TANK,
-    A_MACHINEGUN,
-    A_GROUNDIND,
-    A_AA,
-    A_AIRONLY,
-    A_ALL,
-    A_CRUISERPRIMARY,
-    A_SUB,
-    PRIMARY_ATTACK,
-    SECONDARY_ATTACK)
+from src.codeUtils.helpers import loc_2_gloc
 
 # =============================================================================
 # Weapons
 # =============================================================================
-@dataclass
-class Weapon(ABC):
-    """
-    Represents a weapon on a unit
-    """
-    targets: list
+# @dataclass
+# class Weapon(ABC):
+#     """
+#     Represents a weapon on a unit
+#     """
+#     targets: list
     
-    @abstractmethod
-    def set_attack(self, unit_id):
-        ...
+#     @abstractmethod
+#     def set_attack(self, unit_id):
+#         ...
         
 
 
-@dataclass
-class PrimaryDirectWeapon(Weapon):
-    """
-    Represents a primary direct weapon on a unit
-    """
-    ammo: int
+# @dataclass
+# class PrimaryDirectWeapon(Weapon):
+#     """
+#     Represents a primary direct weapon on a unit
+#     """
+#     ammo: int
     
-    def set_attack(self, unit_id):
-        self.attack = PRIMARY_ATTACK[unit_id]
+#     def set_attack(self, unit_id):
+#         self.attack = PRIMARY_ATTACK[unit_id]
     
     
-@dataclass
-class PrimaryIndirectWeapon(Weapon):   
-    """
-    Represents a primary indirect weapon on a unit
-    """
-    min_range: int
-    max_range: int
+# @dataclass
+# class PrimaryIndirectWeapon(Weapon):   
+#     """
+#     Represents a primary indirect weapon on a unit
+#     """
+#     min_range: int
+#     max_range: int
     
-    ammo: int
+#     ammo: int
     
-    def set_attack(self, unit_id):
-        self.attack = PRIMARY_ATTACK[unit_id]
+#     def set_attack(self, unit_id):
+#         self.attack = PRIMARY_ATTACK[unit_id]
     
 
-@dataclass
-class SecondaryWeapon(Weapon):
-    """
-    Represents a secondary weapon on a unit
-    """
-    min_range = 0
-    max_range = 1
+# @dataclass
+# class SecondaryWeapon(Weapon):
+#     """
+#     Represents a secondary weapon on a unit
+#     """
+#     min_range = 0
+#     max_range = 1
     
-    def set_attack(self, unit_id):
-        self.attack = SECONDARY_ATTACK[unit_id]
+#     def set_attack(self, unit_id):
+#         self.attack = SECONDARY_ATTACK[unit_id]
     
     
 # =============================================================================
@@ -94,27 +82,6 @@ class Transport():
     capacity: int
     carrying: list
 
-
-# # =============================================================================
-# # Movement
-# # =============================================================================
-# @dataclass
-# class Movement(ABC):
-#     """
-#     Represents the movement type of a unit
-#     """
-#     move: int
-#     blocked: list
-
-
-# @dataclass
-# class InfantryMove(Movement):
-#     move = 3
-#     blocked = ["Sea", "Reef", "Pipe"]
-    
-
-# @dataclass
-# class
 
 # =============================================================================
 # Units
@@ -214,7 +181,6 @@ class Recon(Unit):
         self.fuel = 80
         self.move = 8
         self.move_type = 2
-        self.terrain_block_type = 1
         
         self.ammo = -1
 
@@ -229,7 +195,6 @@ class APC(Unit):
         self.fuel = 60
         self.move = 6
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.transport = Transport([0, 1], 1, [])
 
@@ -244,7 +209,6 @@ class Artillery(Unit):
         self.fuel = 50
         self.move = 5
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 9
         self.direct = False
@@ -262,7 +226,6 @@ class Tank(Unit):
         self.fuel = 70
         self.move = 6
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 9
         
@@ -277,7 +240,6 @@ class AntiAir(Unit):
         self.fuel = 60
         self.move = 6
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 9
         
@@ -292,7 +254,6 @@ class Missile(Unit):
         self.fuel = 50
         self.move = 4
         self.move_type = 2
-        self.terrain_block_type = 1
         
         self.ammo = 6
         self.direct = False
@@ -310,7 +271,6 @@ class Rocket(Unit):
         self.fuel = 50
         self.move = 5
         self.move_type = 2
-        self.terrain_block_type = 1
         
         self.ammo = 6
         self.direct = False
@@ -328,7 +288,6 @@ class MediumTank(Unit):
         self.fuel = 50
         self.move = 8
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 8
 
@@ -344,7 +303,6 @@ class Piperunner(Unit):
         self.fuel = 99
         self.move = 9
         self.move_type = 7
-        self.terrain_block_type = 5
         
         self.ammo = 9
         self.direct = False
@@ -362,7 +320,6 @@ class NeoTank(Unit):
         self.fuel = 99
         self.move = 6
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 9
         
@@ -377,7 +334,6 @@ class MegaTank(Unit):
         self.fuel = 50
         self.move = 4
         self.move_type = 3
-        self.terrain_block_type = 1
         
         self.ammo = 3
         
@@ -398,7 +354,6 @@ class TCopter(Unit):
         self.fuel = 99
         self.move = 6
         self.move_type = 4
-        self.terrain_block_type = 2
         
         self.transport = Transport([0, 1], 1, [])
 
@@ -415,7 +370,6 @@ class BCopter(Unit):
         self.fuel = 99
         self.move = 6
         self.move_type = 4
-        self.terrain_block_type = 2
         
         self.ammo = 6
         
@@ -432,7 +386,6 @@ class Fighter(Unit):
         self.fuel = 99
         self.move = 9
         self.move_type = 4
-        self.terrain_block_type = 2
         
         self.ammo = 9
 
@@ -449,7 +402,6 @@ class Bomber(Unit):
         self.fuel = 99
         self.move = 7
         self.move_type = 4
-        self.terrain_block_type = 2
         
         self.ammo = 9
         
@@ -466,7 +418,6 @@ class Stealth(Unit):
         self.fuel = 60
         self.move = 6
         self.move_type = 4
-        self.terrain_block_type = 2
         
         self.ammo = 9
         
@@ -489,7 +440,6 @@ class BlackBoat(Unit):
         self.fuel = 50
         self.move = 7
         self.move_type = 5
-        self.terrain_block_type = 6
         
         self.transport = Transport([0, 1], 2, [])
         
@@ -508,7 +458,6 @@ class Lander(Unit):
         self.fuel = 99
         self.move = 6
         self.move_type = 6
-        self.terrain_block_type = 4
         
         self.transport = Transport(list(range(0, 13)), 2, [])
 
@@ -525,7 +474,6 @@ class Cruiser(Unit):
         self.fuel = 99
         self.move = 6
         self.move_type = 5
-        self.terrain_block_type = 3
         
         self.ammo = 9
         
@@ -544,7 +492,6 @@ class Sub(Unit):
         self.fuel = 60
         self.move = 5
         self.move_type = 5
-        self.terrain_block_type = 3
         
         self.ammo = 6
         
@@ -563,7 +510,6 @@ class Battleship(Unit):
         self.fuel = 99
         self.move = 5
         self.move_type = 5
-        self.terrain_block_type = 3
         
         self.ammo = 9
         self.direct = False
@@ -583,14 +529,13 @@ class Carrier(Unit):
         self.fuel = 99
         self.move = 5
         self.move_type = 5
-        self.terrain_block_type = 3
         
         self.ammo = 9
         self.direct = False
         self.min_range = 3
         self.max_range = 8
         
-        self.transport = Transport(A_AIRONLY, 2, [])
+        self.transport = Transport([13, 14, 15, 16, 17], 2, [])
 
 
 ARCHETYPES = [
