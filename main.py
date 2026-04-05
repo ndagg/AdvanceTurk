@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
+from src.gameObjects.player import Player
 from src.game_init import GameReader
 
-from src.gameObjects.gamemap import BaseMap, UnitMap
-from src.gameObjects.units import Infantry, Recon
+from src.gameObjects.gamemap import BaseMap
+from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
 from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
-    plot_move_graph,
+    plot_moves,
     add_edge_labels
     )
 
@@ -30,14 +31,24 @@ def main():
 
     inf = Infantry(0)
     recon = Recon(1)
-    inf.glocation = 178
-    recon.glocation = 106
+    arty = Artillery(0)
+    inf.set_loc((7, 13), gmap.dims)
+    recon.set_loc((8, 13), gmap.dims)
+    arty.set_loc((8, 12), gmap.dims)
 
-    umap = UnitMap(gmap, [inf, recon])
-    umap.generate_unit_moves(0)
+    player1 = Player(0, None, [inf, arty], gmap)
+    player2 = Player(1, None, [recon], gmap)
 
+    player1.unit_map.update_enemy_units(player2.units)
+    player2.unit_map.update_enemy_units(player1.units)
+    player1.generate_unit_moves()
+    player2.generate_unit_moves()
+    
     ax = plot_map_image(gmap)
-    ax = plot_move_graph(umap.player_move_lists[0][0], ax, True)
+    # ax = plot_moves(player1.attacks[0], gmap.dims, ax, True)
+    ax = plot_moves(player1.attacks[1], gmap.dims, ax, True)
+    # ax = plot_moves(player2.moves[0], gmap.dims, ax, True)
+    ax = plot_moves(player2.attacks[0], gmap.dims, ax, True)
 
     print("bot complete")
     # ax._children[0]._A *= 0

@@ -7,6 +7,7 @@ Created on Fri May 23 20:59:29 2025
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
+from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 from src.gameUtils.aw_lists import (
     A_INF,
     A_TANK,
@@ -80,6 +81,14 @@ class SecondaryWeapon(Weapon):
 class Transport():
     """
     Represents the possible transport capability of a unit
+
+    Attributes:
+        transportable: list
+            list of unit ids that can be transported
+        capacity: int
+            number of units that can be transported
+        carrying: list
+            list of units currently being transported
     """
     transportable: list
     capacity: int
@@ -120,14 +129,6 @@ Move types:
     5: Naval
     6: Littoral
     7: Pipe
-
-Terrain block types:  # Maybe can remove
-    0: Footsoldiers
-    1: Vehicles
-    2: Aircraft
-    3: Naval
-    4: Littoral
-    5: Pipe
 """
 
 class Unit(ABC):
@@ -143,7 +144,6 @@ class Unit(ABC):
         self.owner = 0
         self.move = 0
         self.move_type = 0
-        self.terrain_block_type = 0
         self.can_hide = False
         
         self.ammo = 0
@@ -165,6 +165,9 @@ class Unit(ABC):
             self.hidden = False
             self.daily_drain = 5
 
+    def set_loc(self, loc, dims):
+        self.location = loc
+        self.glocation = loc_2_gloc(loc, dims)
  
     
 # =============================================================================
@@ -214,6 +217,21 @@ class Recon(Unit):
         self.terrain_block_type = 1
         
         self.ammo = -1
+
+
+class APC(Unit):
+    def __init__(self, owner=0):
+        super().__init__()
+        self.owner = owner
+        self.id = 3
+        
+        self.cost = 5000
+        self.fuel = 60
+        self.move = 6
+        self.move_type = 3
+        self.terrain_block_type = 1
+        
+        self.transport = Transport([0, 1], 1, [])
 
 
 class Artillery(Unit):
@@ -314,6 +332,26 @@ class MediumTank(Unit):
         
         self.ammo = 8
 
+
+class Piperunner(Unit):
+    
+    def __init__(self, owner=0):
+        super().__init__()
+        self.owner = owner
+        self.id = 10
+        
+        self.cost = 20000
+        self.fuel = 99
+        self.move = 9
+        self.move_type = 7
+        self.terrain_block_type = 5
+        
+        self.ammo = 9
+        self.direct = False
+        self.min_range = 2
+        self.max_range = 5
+
+
 class NeoTank(Unit):
     def __init__(self, owner=0):
         super().__init__()
@@ -344,59 +382,9 @@ class MegaTank(Unit):
         self.ammo = 3
         
 
-class Piperunner(Unit):
-    
-    def __init__(self, owner=0):
-        super().__init__()
-        self.owner = owner
-        self.id = 10
-        
-        self.cost = 20000
-        self.fuel = 99
-        self.move = 9
-        self.move_type = 6
-        self.terrain_block_type = 5
-        
-        self.ammo = 9
-        self.direct = False
-        self.min_range = 2
-        self.max_range = 5
-        
-
-class APC(Unit):
-    def __init__(self, owner=0):
-        super().__init__()
-        self.owner = owner
-        self.id = 3
-        
-        self.cost = 5000
-        self.fuel = 60
-        self.move = 6
-        self.move_type = 3
-        self.terrain_block_type = 1
-        
-        self.transport = Transport([0, 1], 1, [])
-
 # =============================================================================
 # Air
 # =============================================================================
-
-class BCopter(Unit):
-    def __init__(self, owner=0):
-        super().__init__()
-        self.owner = owner
-        self.id = 14
-        
-        self.daily_drain = 2
-        
-        self.cost = 9000
-        self.fuel = 99
-        self.move = 6
-        self.move_type = 4
-        self.terrain_block_type = 2
-        
-        self.ammo = 6
-
 
 class TCopter(Unit):
     def __init__(self, owner=0):
@@ -413,6 +401,23 @@ class TCopter(Unit):
         self.terrain_block_type = 2
         
         self.transport = Transport([0, 1], 1, [])
+
+
+class BCopter(Unit):
+    def __init__(self, owner=0):
+        super().__init__()
+        self.owner = owner
+        self.id = 14
+        
+        self.daily_drain = 2
+        
+        self.cost = 9000
+        self.fuel = 99
+        self.move = 6
+        self.move_type = 4
+        self.terrain_block_type = 2
+        
+        self.ammo = 6
         
         
 class Fighter(Unit):
@@ -476,7 +481,7 @@ class BlackBoat(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 19
+        self.id = 18
         
         self.daily_drain = 1
         
@@ -495,7 +500,7 @@ class Lander(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 20
+        self.id = 19
         
         self.daily_drain = 1
         
@@ -512,7 +517,7 @@ class Cruiser(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 21
+        self.id = 20
         
         self.daily_drain = 1
         
@@ -531,7 +536,7 @@ class Sub(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 22
+        self.id = 21
         
         self.daily_drain = 1
         
@@ -550,7 +555,7 @@ class Battleship(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 23
+        self.id = 22
         
         self.daily_drain = 1
         
@@ -570,7 +575,7 @@ class Carrier(Unit):
     def __init__(self, owner=0):
         super().__init__()
         self.owner = owner
-        self.id = 24
+        self.id = 23
         
         self.daily_drain = 1
         
@@ -615,27 +620,27 @@ ARCHETYPES = [
     Carrier()]
 
 UNITS = [
-    Infantry,
-    Mech,
-    Recon,
-    APC,
-    Artillery,
-    Tank,
-    AntiAir,
-    Missile,
-    Rocket,
-    MediumTank,
-    Piperunner,
-    NeoTank,
-    MegaTank,
-    TCopter,
-    BCopter,
-    Fighter,
-    Bomber,
-    Stealth,
-    BlackBoat,
-    Lander,
-    Cruiser,
-    Sub,
-    Battleship,
-    Carrier]
+    Infantry,   #0
+    Mech,       #1
+    Recon,      #2
+    APC,        #3
+    Artillery,  #4
+    Tank,       #5
+    AntiAir,    #6
+    Missile,    #7
+    Rocket,     #8
+    MediumTank, #9
+    Piperunner, #10
+    NeoTank,    #11
+    MegaTank,   #12
+    TCopter,    #13
+    BCopter,    #14
+    Fighter,    #15
+    Bomber,     #16
+    Stealth,    #17
+    BlackBoat,  #18
+    Lander,     #19
+    Cruiser,    #20
+    Sub,        #21
+    Battleship, #22
+    Carrier]    #23

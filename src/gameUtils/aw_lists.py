@@ -7,7 +7,7 @@ Created on Sat May 24 12:53:42 2025
 
 import numpy as np
 
-# Attack Lists
+# Attack Lists - who can attack which unit types
 A_INF = np.array(range(0, 15))
 A_TANK = np.array(list(range(2, 13)) + list(range(19, 25)))
 A_MACHINEGUN = np.array([0, 1, 13, 14])
@@ -77,27 +77,30 @@ SECONDARY_ATTACK = np.array([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ])
 
+ANY_ATTACK = PRIMARY_ATTACK + SECONDARY_ATTACK
 
+
+# TODO - add rain and snow
 # Terrain Types
 TERRAIN_TYPES = [
-    "Plain",
-    "Mountain",
-    "Wood",
-    "River",
-    "Road",
-    "Bridge",
-    "Sea",
-    "Shoal",
-    "Reef",
-    "Pipe",
-    "Silo",
-    "City",
-    "Base",
-    "Airport",
-    "Port",
-    "HQ",
-    "Com Tower",
-    "Lab"]
+    "Plain",    #0
+    "Mountain", #1
+    "Wood",     #2
+    "River",    #3
+    "Road",     #4
+    "Bridge",   #5
+    "Sea",      #6
+    "Shoal",    #7
+    "Reef",     #8
+    "Pipe",     #9
+    "Silo",     #10
+    "City",     #11
+    "Base",     #12
+    "Airport",  #13
+    "Port",     #14
+    "HQ",       #15
+    "Com Tower",#16
+    "Lab"]      #17
 
 # Terrain Defence
 TERRAIN_DEFENCE = {
@@ -122,12 +125,14 @@ TERRAIN_DEFENCE = {
 
 # Terrain Move Costs
 TERRAIN_COST = np.array([
-    [1, 2, 1, 2, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [2, 0, 3, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 2, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0]
+#   0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17
+#   Pl Mn Wo Ri Ro Br Se Sh Re Pi Si Ci Ba Ai Po HQ Co La
+    [1, 2, 1, 2, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Infantry     0
+    [1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Mechs        1
+    [2, 0, 3, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Wheels       2
+    [1, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Tracks       3
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Air          4
+    [0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],  # Naval        5
+    [0, 0, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],  # Littoral     6
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0]   # Piperunner   7
     ])
