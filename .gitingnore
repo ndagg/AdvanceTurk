@@ -1,0 +1,7 @@
+# Ignore dotted files/directories
+.venv/
+.vscode/
+.python-version
+
+# Misc UV files
+uv.lock
