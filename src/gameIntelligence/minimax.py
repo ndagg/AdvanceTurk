@@ -12,12 +12,12 @@ def minimax(gamestate: object,
             ):
     
     # Check if recursion has to end
-    if gamestate.gameover or current_depth == max_depth:
+    if gamestate.is_gameover() or current_depth == max_depth:
         return gamestate.evaluate(player)
     
     # Otherwise bubble up
     best_move = None
-    if gamestate.current_player() == player:
+    if gamestate.current_player == player:
         best_score = -1e10
     else:
         best_score = 1e10

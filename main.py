@@ -3,6 +3,8 @@ from src.gameObjects.player import Player
 from src.game_init import GameReader
 
 from src.gameObjects.gamemap import BaseMap
+from src.gameObjects.unitmap import UnitMap
+from src.gameObjects.gamestate import GameState
 from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
 from src.codeUtils.plotting import (
     plot_map_graph,
@@ -36,14 +38,16 @@ def main():
     recon.set_loc((8, 13), gmap.dims)
     arty.set_loc((8, 12), gmap.dims)
 
-    player1 = Player(0, None, [inf, arty], gmap)
-    player2 = Player(1, None, [recon], gmap)
+    player1 = Player(0, None, [inf, arty])
+    player2 = Player(1, None, [recon])
+    umap = UnitMap(gmap, {0: player1.units, 1: player2.units})
+    gamestate = GameState([player1, player2], umap)
 
-    player1.unit_map.update_enemy_units(player2.units)
-    player2.unit_map.update_enemy_units(player1.units)
-    player1.generate_unit_moves()
-    player2.generate_unit_moves()
-    
+    umap.update_units(player2)
+    umap.update_units(player1)
+    player1_moves = gamestate.get_moves()
+
+
     ax = plot_map_image(gmap)
     # ax = plot_moves(player1.attacks[0], gmap.dims, ax, True)
     ax = plot_moves(player1.attacks[1], gmap.dims, ax, True)

@@ -26,33 +26,38 @@ class UnitMap():
         The x and y dimensions of the map
     """
 
-    def __init__(self, base_map, unit_dict: dict):
+    def __init__(self, base_map, unit_dicts: dict[dict, dict]):
         self.super_graph = base_map.super_graph
         self.pure_terrain_graphs = base_map.sub_graphs
         self.dims = base_map.dims
-        self.friendly_units = unit_dict
-        self.enemy_units = {}
+        self.unit_dicts = unit_dicts
+        self.terrain_graphs = []
 
         # TODO - add capture, load, hide, and delete moves
 
-    def update_move_graphs(self):
+    def update_move_graphs(self, player):
         """
         Update the movement graphs to account for occupied tiles
         """
+        blocking = list(self.unit_dicts.keys())
+        blocking.remove(player.team)
+        blocking_units = []
+        [blocking_units.extend(list(self.unit_dicts[d].values())) for d in blocking]
+
         self.terrain_graphs = []
         for graph in self.pure_terrain_graphs:
             g = graph.copy()
-            for unit in self.enemy_units.values():
+            for unit in blocking_units:
                 if unit.glocation in g:
                     g.remove_node(unit.glocation)
             self.terrain_graphs.append(g)
 
-    def update_enemy_units(self, enemy_units: dict):
+    def update_units(self, player: object):
         """
         Update the list of enemy units and update the movement graphs accordingly
         """
-        self.enemy_units = enemy_units
-        self.update_move_graphs()
+        self.unit_dicts[player.team] = player.units  # TODO - is this necessary? Can it just pass around a single persistent dict between the player and the unit map
+        self.update_move_graphs(player)
 
     def generate_single_unit_move(self, unit: object) -> tuple[list, list]:
         """
@@ -70,7 +75,7 @@ class UnitMap():
                 if i.glocation in no_att and i is not unit:
                     no_att.remove(i.glocation)
         else:
-            no_att = unit.glocation
+            no_att = [unit.glocation]
         # Get attackable tiles for direct units
         if unit.direct:
             att_tiles = self.generate_direct_attack_tiles(no_att)
@@ -102,3 +107,7 @@ class UnitMap():
             if tile in self.super_graph:
                 att.update(self.super_graph.neighbors(tile))
         return list(att)
+
+
+    def move_unit(self, move):
+        ...
