@@ -17,7 +17,7 @@ def calc_range_mask():
 
 DIST_MASK = calc_range_mask()
 
-def generate_indirect_attack_tiles(glocation: int, min_range: int, max_range: int, dims: tuple) -> list:
+def get_indirect_attack_tiles(glocation: int, min_range: int, max_range: int, dims: tuple) -> list:
     """
     Given a grid location and ranges calculate all grid locations within taxicab distance range
     """

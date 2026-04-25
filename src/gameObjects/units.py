@@ -123,7 +123,7 @@ class Unit(ABC):
         
         self.location = None
         self.glocation = None
-    
+
     def hide_unhide(self):
         if not self.hidden:
             self.hidden = True
@@ -136,7 +136,11 @@ class Unit(ABC):
         self.location = loc
         self.glocation = loc_2_gloc(loc, dims)
  
-    
+    def __repr__(self):
+        outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.vhp}"
+        return outstr
+
+
 # =============================================================================
 # Land
 # =============================================================================

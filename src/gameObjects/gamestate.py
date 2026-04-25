@@ -4,6 +4,8 @@ Created on Wed Apr 08 20:27:07 2026
 
 @author: ndagg
 """
+from src.gameObjects.moves import Move
+
 
 class GameState():
 
@@ -17,14 +19,14 @@ class GameState():
 
     def get_moves(self):
         moves = []
-        for i, unit in self.current_player.units.items():
-            moves.extend(self.generate_single_unit_move(unit, i))
+        for i, unit in enumerate(self.current_player.units):
+            moves.extend(self.generate_single_unit_moves(unit, i))
         return moves
     
-    def generate_single_unit_move(self, unit, unit_ind):
-        moves, attacks = self.unit_map.generate_single_unit_move(unit)
-        moves[unit_ind] = moves
-        attacks[unit_ind] = attacks
+    def generate_single_unit_moves(self, unit, unit_ind):
+        mov, att = self.unit_map.generate_single_unit_moves(unit)
+        moves = [Move(unit, i) for i in mov]
+        attacks = [Move(unit, i[0], i[1]) for i in att]
         return moves + attacks
     
     def make_move(self, move: tuple):

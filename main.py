@@ -40,11 +40,12 @@ def main():
 
     player1 = Player(0, None, [inf, arty])
     player2 = Player(1, None, [recon])
-    umap = UnitMap(gmap, {0: player1.units, 1: player2.units})
+    umap = UnitMap(gmap, (player1, player2))
     gamestate = GameState([player1, player2], umap)
 
-    umap.update_units(player2)
-    umap.update_units(player1)
+    umap.set_current_player(player1)
+    umap.update_units_by_player(player2)
+    umap.update_units_by_player(player1)
     player1_moves = gamestate.get_moves()
 
 

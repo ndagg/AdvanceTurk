@@ -6,7 +6,7 @@ Created on Sun April 05 17:08:42 2026
 """
 import networkx as nx
 
-from src.gameUtils.indirect_range import generate_indirect_attack_tiles
+from src.gameUtils.indirect_range import get_indirect_attack_tiles
 from src.gameUtils.aw_lists import ANY_ATTACK
 
 
@@ -26,43 +26,54 @@ class UnitMap():
         The x and y dimensions of the map
     """
 
-    def __init__(self, base_map, unit_dicts: dict[dict, dict]):
+    def __init__(self, base_map, players):
         self.super_graph = base_map.super_graph
         self.pure_terrain_graphs = base_map.sub_graphs
         self.dims = base_map.dims
-        self.unit_dicts = unit_dicts
+        self.unit_lists = [i.units for i in players]
         self.terrain_graphs = []
 
         # TODO - add capture, load, hide, and delete moves
+    
+    def set_current_player(self, player):
+        """
+        Set state of unit lists used for blocking/targets
+        """
+        self.current_player = player.team
+        blocking = list(range(len(self.unit_lists)))
+        blocking.remove(player.team)
+        blocking_units = []
+        [blocking_units.extend(self.unit_lists[d]) for d in blocking]
+        self.blocking = blocking_units  # Will need updating if more than two teams are used
+        self.targets = blocking_units
 
-    def update_move_graphs(self, player):
+    def update_move_graphs(self):
         """
         Update the movement graphs to account for occupied tiles
         """
-        blocking = list(self.unit_dicts.keys())
-        blocking.remove(player.team)
-        blocking_units = []
-        [blocking_units.extend(list(self.unit_dicts[d].values())) for d in blocking]
-
         self.terrain_graphs = []
         for graph in self.pure_terrain_graphs:
             g = graph.copy()
-            for unit in blocking_units:
+            for unit in self.blocking:
                 if unit.glocation in g:
                     g.remove_node(unit.glocation)
             self.terrain_graphs.append(g)
 
-    def update_units(self, player: object):
+    def update_units_by_player(self, player: object):
         """
-        Update the list of enemy units and update the movement graphs accordingly
+        Update a list of units and update the movement graphs accordingly
         """
-        self.unit_dicts[player.team] = player.units  # TODO - is this necessary? Can it just pass around a single persistent dict between the player and the unit map
-        self.update_move_graphs(player)
+        self.unit_lists[player.team] = player.units  # TODO - is this necessary? Can it just pass around a single persistent dict between the player and the unit map
+        self.update_move_graphs()
 
-    def generate_single_unit_move(self, unit: object) -> tuple[list, list]:
+    def generate_single_unit_moves(self, unit: object) -> tuple[list, list]:
         """
         Generate a subgraph showing the possible moves for a unit
         """
+        #
+        # This Function could do with reworking, it's overly complex
+        #
+
         movetype_graph = self.terrain_graphs[unit.move_type]
         # Get movements considering terrain constraints and other units
         # TODO - account for units starting on impassable tiles
@@ -71,26 +82,33 @@ class UnitMap():
                 movetype_graph, unit.glocation, cutoff=unit.move, weight='cost')
             no_att = list(no_att.keys())
 
-            for i in self.friendly_units:
+            for i in self.unit_lists[unit.owner]:
                 if i.glocation in no_att and i is not unit:
                     no_att.remove(i.glocation)
         else:
             no_att = [unit.glocation]
-        # Get attackable tiles for direct units
-        if unit.direct:
-            att_tiles = self.generate_direct_attack_tiles(no_att)
-        # Get attackable tiles for indirect units
-        else:
-            att_tiles = generate_indirect_attack_tiles(unit.glocation, unit.min_range, unit.max_range, self.dims)
-            # att = super_graph.subgraph
+        # Get attackable tiles for direct units, this could be a lot more efficient
         att = []
-        for t in att_tiles:
-            for eunit_ind, eunit in self.enemy_units.items():
+        if unit.direct:
+            for eunit in self.targets:
                 if not ANY_ATTACK[unit.id, eunit.id]:
                     continue  # skip if unit can't attack this type
-                if t == eunit.glocation:
-                    att.append((t, eunit_ind))
-                    break
+                for t in no_att:
+                    attacks = self.super_graph.neighbors(t)
+                    for a in attacks:
+                        if a == eunit.glocation:
+                            att.append((t, eunit))
+        # Get attackable tiles for indirect units
+        else:
+            att_tiles = self.generate_indirect_attack_tiles(unit.glocation, unit.min_range, unit.max_range, self.dims)
+            for t in att_tiles:
+                for eunit in self.targets:
+                    if not ANY_ATTACK[unit.id, eunit.id]:
+                        continue  # skip if unit can't attack this type
+                    if t == eunit.glocation:
+                        att.append((t, eunit))
+                        break
+            # att = super_graph.subgraph
 
         # unit.moves = movetype_graph.subgraph(no_att).copy()
         # unit.attacks = movetype_graph.subgraph(att).copy()
@@ -107,7 +125,9 @@ class UnitMap():
             if tile in self.super_graph:
                 att.update(self.super_graph.neighbors(tile))
         return list(att)
-
-
+    
+    def generate_indirect_attack_tiles(self, glocation, min_range, max_range, dims):
+        return get_indirect_attack_tiles(glocation, min_range, max_range, dims)
+    
     def move_unit(self, move):
         ...
