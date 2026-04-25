@@ -10,9 +10,10 @@ class Move():
     A class for storing moves to be acted on by decision-making logic
     """
     
-    def __init__(self, unit, destination, attack_target=None):
+    def __init__(self, unit: object, destination: int, fuel: int, attack_target: object=None):
         self.unit = unit
         self.destination = destination
+        self.fuel_cost = fuel
         self.attack_target = attack_target
     
     def __repr__(self):

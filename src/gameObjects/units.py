@@ -6,8 +6,10 @@ Created on Fri May 23 20:59:29 2025
 """
 from abc import ABC
 from dataclasses import dataclass
+from math import ceil
 
-from src.codeUtils.helpers import loc_2_gloc
+from src.codeUtils.helpers import loc_2_gloc, gloc_2_loc
+from src.codeUtils.engineExceptions import EngineValueException
 
 # =============================================================================
 # Weapons
@@ -118,6 +120,7 @@ class Unit(ABC):
         self.min_range = 0
         self.max_range = 1
         self.transport = None
+        self.active = True
         
         self.capture_power = 0  # Apply capture_power * vhp to properties
         
@@ -132,9 +135,25 @@ class Unit(ABC):
             self.hidden = False
             self.daily_drain = 5
 
+    def take_damage(self, amount: int):
+        if self.hp <= amount:
+            return
+        self.hp -= amount
+        self.vhp = ceil(self.hp / 10)
+
+    def reduce_fuel(self, amount):
+        if self.fuel - amount < 0:
+            raise EngineValueException(f"{self} - Attempting to spend more fuel than remains")
+        else:
+            self.fuel -= amount
+
     def set_loc(self, loc, dims):
         self.location = loc
         self.glocation = loc_2_gloc(loc, dims)
+
+    def set_gloc(self, gloc, dims):
+        self.glocation = gloc
+        self.location = gloc_2_loc(gloc, dims)
  
     def __repr__(self):
         outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.vhp}"
