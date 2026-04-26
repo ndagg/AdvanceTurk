@@ -11,7 +11,8 @@ def calc_damage(
         a_terrain: int, 
         d_terrain: int,
         a_co: object, 
-        d_co: object) -> list[int]:
+        d_co: object,
+        ) -> list[int]:
     """
     Calculate the damage dealt range of an attack
     """

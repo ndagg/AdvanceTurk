@@ -5,10 +5,12 @@ Created on Wed Apr 08 20:27:07 2026
 @author: ndagg
 """
 from copy import deepcopy
+import logging
 
 from src.gameObjects.moves import Move
 from src.gameUtils.damage_calc import calc_damage
 
+logger = logging.getLogger("mainlogger.gamestate")
 
 class GameState():
 
@@ -23,44 +25,62 @@ class GameState():
 
     def get_moves(self):
         self.current_moves = []
-        for i, unit in enumerate(self.current_player.units):
+        for unit in self.current_player.units:
             if unit.active:
                 self.current_moves.extend(
                     self.unit_map.generate_single_unit_moves(unit))
+        return self.current_moves
 
     def make_move(self, move: object) -> object:
-        if move.attack is not None:
-            self.make_attack(move)
-        self.unitmap.move_unit(move)
-        self.current_moves = [
-            m for m in self.current_moves if m.unit != move.unit and m.destination != move.destination]
+        logger.debug(f"Making move: {move}")
+        if move.attack_target is not None:
+            a_survive, d_survive = self.make_attack(move)
+            if a_survive:
+                self.unitmap.move_unit(move)
+        else:
+            self.unit_map.move_unit(move)
         return deepcopy(self)
     
-    def make_attack(self, move: object):
+    def make_attack(self, move: object) -> tuple[bool]:
         """
         Apply the effects of an attack to the two units involved
         """
         attacker = move.unit
         defender = move.attack_target
+        attack_co = self.players[attacker.owner].co
+        defend_co = self.players[defender.owner].co
+        attack_terrain = self.unit_map.super_graph[attacker.glocation]
+        defend_terrain = self.unit_map.super_graph[defender.glocation]
+
         # TODO - consider random variance, and fucking Sonja
         hi, lo = calc_damage(
             attacker,
             defender,
-            # terrain, COs
+            attack_terrain,
+            defend_terrain,
+            attack_co,
+            defend_co
             )
         expected = (hi+lo)//2
         d_survive = defender.take_damage(expected)
+
         if d_survive and attacker.direct:
             hi, lo = calc_damage(
-                attacker,
                 defender,
-                # terrain, COs
-            )
+                attacker,
+                defend_terrain,
+                attack_terrain,
+                defend_co,
+                attack_co
+                )
             expected = (hi+lo)//2
             a_survive = attacker.take_damage(expected)
+            if not a_survive:
+                self.players[attacker.owner].units.remove(attacker)
         else:
             self.players[defender.owner].units.remove(defender)
-
+        
+        return a_survive, d_survive
 
     def evaluate(self, evaluator: object) -> int:
         value = evaluator.evaluate(self.current_player)

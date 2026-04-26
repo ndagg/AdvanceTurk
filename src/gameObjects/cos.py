@@ -7,6 +7,7 @@ Created on Sun May 25 10:05:39 2025
 
 from abc import ABC, abstractmethod
 import copy
+import logging
 
 from src.gameUtils.aw_lists import (
     PRIMARY_ATTACK,
@@ -14,6 +15,8 @@ from src.gameUtils.aw_lists import (
     TERRAIN_DEFENCE)
 
 from src.gameObjects.units import ARCHETYPES, UNITS
+
+logger = logging.getLogger("mainlogger.cos")
 
 
 class CO(ABC):
@@ -59,7 +62,7 @@ class CO(ABC):
             self.factory_list.append(unit)
             
     
-    def unit_factory(self, unit_id):
+    def unit_factory(self, unit_id: int) -> object:
         """
         Create a unit with the default stats
         """
@@ -144,3 +147,8 @@ class CO(ABC):
         
         defence = unit_defence + TERRAIN_DEFENCE[d_terrain]
         return defence
+    
+class BlankCO(CO):
+    def __init__(self):
+        super.__init__()
+        logger.warning("Using BlankCO!")

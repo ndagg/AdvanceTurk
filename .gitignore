@@ -13,3 +13,6 @@ uv.lock
 
 # egg-info
 *.egg-info
+
+# logs
+*_log.txt

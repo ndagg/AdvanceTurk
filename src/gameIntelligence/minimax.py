@@ -4,6 +4,9 @@ Created on Wed Apr 08 20:17:07 2026
 
 @author: ndagg
 """
+import logging
+
+logger = logging.getLogger("mainlogger.minimax")
 
 def minimax(gamestate: object,
             player: object,
@@ -11,6 +14,7 @@ def minimax(gamestate: object,
             current_depth: int
             ):
     
+    logger.info(f"Entering minimax at depth {current_depth}")
     # Check if recursion has to end
     if gamestate.is_gameover() or current_depth == max_depth:
         return gamestate.evaluate(player)
@@ -32,14 +36,17 @@ def minimax(gamestate: object,
             player,
             max_depth,
             current_depth+1)
+        logger.info(f"Exiting minimax, score: {current_score}, depth: {current_depth}")
         
         # Update best score
-        if gamestate.current_player() == player:
+        if gamestate.current_player == player:
             if current_score > best_score:
+                logger.info(f"New best score: {current_score}, previous score: {best_score}")
                 best_score = current_score
                 best_move = move
         else:
             if current_score < best_score:
+                logger.debug(f"No improvement, current score: {best_score}, discarded score: {current_score}")
                 best_score = current_score
                 best_move = move
     

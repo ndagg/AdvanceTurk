@@ -1,11 +1,14 @@
+import logging
 from bs4 import BeautifulSoup
-from src.gameObjects.player import Player
+
 from src.game_init import GameReader
 
+from src.gameObjects.player import Player
 from src.gameObjects.gamemap import BaseMap
 from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.gamestate import GameState
 from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
+
 from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
@@ -13,7 +16,13 @@ from src.codeUtils.plotting import (
     add_edge_labels
     )
 
+from src.gameIntelligence.minimax import minimax
+
 def main():
+
+    logging.basicConfig(filename="main_log.txt", level=logging.DEBUG)
+    logger = logging.getLogger("mainlogger")
+
     with open("test_files/caustic_test.txt", 'r') as file:
         file = file.read()
     
@@ -46,17 +55,13 @@ def main():
     umap.set_current_player(player1)
     umap.update_units_by_player(player2)
     umap.update_units_by_player(player1)
-    player1_moves = gamestate.get_moves()
+
+    score, move = minimax(gamestate, player1, 3, 0)
 
 
-    ax = plot_map_image(gmap)
-    # ax = plot_moves(player1.attacks[0], gmap.dims, ax, True)
-    ax = plot_moves(player1.attacks[1], gmap.dims, ax, True)
-    # ax = plot_moves(player2.moves[0], gmap.dims, ax, True)
-    ax = plot_moves(player2.attacks[0], gmap.dims, ax, True)
 
     print("bot complete")
-    # ax._children[0]._A *= 0
+
 
 
 if __name__ == "__main__":

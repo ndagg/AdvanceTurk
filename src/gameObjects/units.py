@@ -4,12 +4,14 @@ Created on Fri May 23 20:59:29 2025
 
 @author: ndagg
 """
+import logging
 from abc import ABC
 from dataclasses import dataclass
-from math import ceil
 
 from src.codeUtils.helpers import loc_2_gloc, gloc_2_loc
 from src.codeUtils.engineExceptions import EngineValueException
+
+logger = logging.getLogger("mainlog.units")
 
 # =============================================================================
 # Weapons
@@ -136,14 +138,19 @@ class Unit(ABC):
             self.daily_drain = 5
 
     def take_damage(self, amount: int):
+        """
+        Apply damage to unit, return False if unit dies
+        """
         if self.hp <= amount:
-            return
+            return False
         self.hp -= amount
-        self.vhp = ceil(self.hp / 10)
+        self.vhp = -(self.hp // -10)  # Upside-down floor probably overkill, but avoids floats
 
     def reduce_fuel(self, amount):
         if self.fuel - amount < 0:
-            raise EngineValueException(f"{self} - Attempting to spend more fuel than remains")
+            raise EngineValueException(
+                f"{self} - Attempting to spend more fuel than remains\n"
+                + f"Current reserve: {self.fuel}, spend amount: {amount}")
         else:
             self.fuel -= amount
 
@@ -157,6 +164,8 @@ class Unit(ABC):
  
     def __repr__(self):
         outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.vhp}"
+        if logger.level == logging.DEBUG:
+            outstr += f", fuel: {self.fuel}"
         return outstr
 
 

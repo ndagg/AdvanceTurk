@@ -5,12 +5,14 @@ Created on Sun April 05 17:08:42 2026
 @author: ndagg
 """
 import networkx as nx
+import logging
 
 from src.gameUtils.indirect_range import get_indirect_attack_tiles
 from src.gameUtils.aw_lists import ANY_ATTACK
 
 from src.gameObjects.moves import Move
 
+logger = logging.getLogger("mainlogger.unitmap")
 
 class UnitMap():
     """
@@ -41,6 +43,7 @@ class UnitMap():
         """
         Set state of unit lists used for blocking/targets
         """
+        logger.info(f"Current player is: {player.team}, {player.co}")
         self.current_player = player.team
         blocking = list(range(len(self.unit_lists)))
         blocking.remove(player.team)
@@ -123,7 +126,7 @@ class UnitMap():
     
     def move_unit(self, move: Move):
         start = move.unit.glocation
-        move.unit.set_gloc(move.destination)
+        move.unit.set_gloc(move.destination, self.dims)
         move.unit.reduce_fuel(move.fuel_cost)
         move.unit.active = False
         
