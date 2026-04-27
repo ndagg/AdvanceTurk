@@ -14,7 +14,9 @@ def minimax(gamestate: object,
             current_depth: int
             ):
     
+    logger.parent.handlers[0].formatter.indent = current_depth
     logger.info(f"Entering minimax at depth {current_depth}")
+    
     # Check if recursion has to end
     if gamestate.is_gameover() or current_depth == max_depth:
         return gamestate.evaluate(player)
@@ -27,7 +29,9 @@ def minimax(gamestate: object,
         best_score = 1e10
     
     # Go through moves
-    for move in gamestate.get_moves():
+    moves = gamestate.get_moves()
+    logger.debug(f"{len(moves)} available moves")
+    for move in moves:
         new_gamestate = gamestate.make_move(move)
 
         # Recurse
@@ -36,6 +40,8 @@ def minimax(gamestate: object,
             player,
             max_depth,
             current_depth+1)
+        
+        logger.parent.handlers[0].formatter.indent = current_depth
         logger.info(f"Exiting minimax, score: {current_score}, depth: {current_depth}")
         
         # Update best score

@@ -1,5 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
+from copy import deepcopy
 
 from src.game_init import GameReader
 
@@ -9,6 +10,7 @@ from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.gamestate import GameState
 from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
 
+from src.codeUtils.log_helpers import logger
 from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
@@ -19,9 +21,6 @@ from src.codeUtils.plotting import (
 from src.gameIntelligence.minimax import minimax
 
 def main():
-
-    logging.basicConfig(filename="main_log.txt", level=logging.DEBUG)
-    logger = logging.getLogger("mainlogger")
 
     with open("test_files/caustic_test.txt", 'r') as file:
         file = file.read()
@@ -51,6 +50,7 @@ def main():
     player2 = Player(1, None, [recon])
     umap = UnitMap(gmap, (player1, player2))
     gamestate = GameState([player1, player2], umap)
+
 
     umap.set_current_player(player1)
     umap.update_units_by_player(player2)

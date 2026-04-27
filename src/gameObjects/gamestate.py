@@ -36,10 +36,10 @@ class GameState():
         if move.attack_target is not None:
             a_survive, d_survive = self.make_attack(move)
             if a_survive:
-                self.unitmap.move_unit(move)
+                self.unit_map.move_unit(move)
         else:
             self.unit_map.move_unit(move)
-        return deepcopy(self)
+        return deepcopy(self)  # TODO - Need to make deepcopy of unit before making the move, otherwise the effects of the move persist when moving back up in minimax
     
     def make_attack(self, move: object) -> tuple[bool]:
         """

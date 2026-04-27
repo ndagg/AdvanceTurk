@@ -152,6 +152,8 @@ class Unit(ABC):
                 f"{self} - Attempting to spend more fuel than remains\n"
                 + f"Current reserve: {self.fuel}, spend amount: {amount}")
         else:
+            logger.debug(
+                f"{self.__class__.__name__} reducing fuel from {self.fuel} by {amount}, id: {hex(id(self))}")
             self.fuel -= amount
 
     def set_loc(self, loc, dims):
@@ -164,8 +166,6 @@ class Unit(ABC):
  
     def __repr__(self):
         outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.vhp}"
-        if logger.level == logging.DEBUG:
-            outstr += f", fuel: {self.fuel}"
         return outstr
 
 
