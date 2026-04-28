@@ -14,6 +14,7 @@ import numpy as np
 from src.gameUtils.aw_lists import TERRAIN_TYPES
 
 from src.codeUtils.constants import TILEPX, TILEHF
+from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 
 
 def alpha_blend(foreground, background):
@@ -56,17 +57,17 @@ def plot_map_graph(graph, ax=None):
     
     return ax
 
-def plot_move_graph(graph, ax=None, over_img=True):
+def plot_moves(moves, dims, ax=None, over_img=True):
     if ax is None:
         fig, ax = plt.subplots()
     
-    pos = {k: v["coords"] for k, v in graph._node.items()}
+    pos = [gloc_2_loc(move, dims) for move in moves]
     
     if over_img:
         img = [i for i in ax._children
                if type(i) is matplotlib.image.AxesImage][0]
-        ys = [i[0] * TILEPX for i in pos.values()]
-        xs = [i[1] * TILEPX for i in pos.values()]
+        ys = [i[0] * TILEPX for i in pos]
+        xs = [i[1] * TILEPX for i in pos]
         
         blue = np.array(Image.open("images/highlights.png"))
         
@@ -78,8 +79,8 @@ def plot_move_graph(graph, ax=None, over_img=True):
         
     else:
         pos = get_pixel_pos(pos)
-        x = [i[0] for i in pos.values()]
-        y = [i[1] for i in pos.values()]
+        x = [i[0] for i in pos]
+        y = [i[1] for i in pos]
         ax.scatter(x, y, marker='s', s=400, color='cyan', alpha=0.5)
     return ax
     

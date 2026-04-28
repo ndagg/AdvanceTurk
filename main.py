@@ -1,16 +1,27 @@
+import logging
 from bs4 import BeautifulSoup
+from copy import deepcopy
+
 from src.game_init import GameReader
 
-from src.gameObjects.gamemap import BaseMap, UnitMap
-from src.gameObjects.units import Infantry, Recon
+from src.gameObjects.player import Player
+from src.gameObjects.gamemap import BaseMap
+from src.gameObjects.unitmap import UnitMap
+from src.gameObjects.gamestate import GameState
+from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
+
+from src.codeUtils.log_helpers import logger
 from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
-    plot_move_graph,
+    plot_moves,
     add_edge_labels
     )
 
+from src.gameIntelligence.minimax import minimax
+
 def main():
+
     with open("test_files/caustic_test.txt", 'r') as file:
         file = file.read()
     
@@ -30,17 +41,27 @@ def main():
 
     inf = Infantry(0)
     recon = Recon(1)
-    inf.glocation = 178
-    recon.glocation = 106
+    arty = Artillery(0)
+    inf.set_loc((7, 13), gmap.dims)
+    recon.set_loc((8, 13), gmap.dims)
+    arty.set_loc((8, 12), gmap.dims)
 
-    umap = UnitMap(gmap, [inf, recon])
-    umap.generate_unit_moves(0)
+    player1 = Player(0, None, [inf, arty])
+    player2 = Player(1, None, [recon])
+    umap = UnitMap(gmap, (player1, player2))
+    gamestate = GameState([player1, player2], umap)
 
-    ax = plot_map_image(gmap)
-    ax = plot_move_graph(umap.player_move_lists[0][0], ax, True)
+
+    umap.set_current_player(player1)
+    umap.update_units_by_player(player2)
+    umap.update_units_by_player(player1)
+
+    score, move = minimax(gamestate, player1, 3, 0)
+
+
 
     print("bot complete")
-    # ax._children[0]._A *= 0
+
 
 
 if __name__ == "__main__":

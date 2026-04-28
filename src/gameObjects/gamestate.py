@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr 08 20:27:07 2026
+
+@author: ndagg
+"""
+from copy import deepcopy
+import logging
+
+from src.gameObjects.moves import Move
+from src.gameUtils.damage_calc import calc_damage
+
+logger = logging.getLogger("mainlogger.gamestate")
+
+class GameState():
+
+    def __init__(
+            self,
+            players: list[object],
+            unit_map: object):
+        self.players = players
+        self.current_player = players[0]
+        self.unit_map = unit_map
+        self.current_moves = []
+
+    def get_moves(self):
+        self.current_moves = []
+        for unit in self.current_player.units:
+            if unit.active:
+                self.current_moves.extend(
+                    self.unit_map.generate_single_unit_moves(unit))
+        return self.current_moves
+
+    def make_move(self, move: object) -> object:
+        logger.debug(f"Making move: {move}")
+        if move.attack_target is not None:
+            a_survive, d_survive = self.make_attack(move)
+            if a_survive:
+                self.unit_map.move_unit(move)
+        else:
+            self.unit_map.move_unit(move)
+        return deepcopy(self)  # TODO - Need to make deepcopy of unit before making the move, otherwise the effects of the move persist when moving back up in minimax
+    
+    def make_attack(self, move: object) -> tuple[bool]:
+        """
+        Apply the effects of an attack to the two units involved
+        """
+        attacker = move.unit
+        defender = move.attack_target
+        attack_co = self.players[attacker.owner].co
+        defend_co = self.players[defender.owner].co
+        attack_terrain = self.unit_map.super_graph[attacker.glocation]
+        defend_terrain = self.unit_map.super_graph[defender.glocation]
+
+        # TODO - consider random variance, and fucking Sonja
+        hi, lo = calc_damage(
+            attacker,
+            defender,
+            attack_terrain,
+            defend_terrain,
+            attack_co,
+            defend_co
+            )
+        expected = (hi+lo)//2
+        d_survive = defender.take_damage(expected)
+
+        if d_survive and attacker.direct:
+            hi, lo = calc_damage(
+                defender,
+                attacker,
+                defend_terrain,
+                attack_terrain,
+                defend_co,
+                attack_co
+                )
+            expected = (hi+lo)//2
+            a_survive = attacker.take_damage(expected)
+            if not a_survive:
+                self.players[attacker.owner].units.remove(attacker)
+        else:
+            self.players[defender.owner].units.remove(defender)
+        
+        return a_survive, d_survive
+
+    def evaluate(self, evaluator: object) -> int:
+        value = evaluator.evaluate(self.current_player)
+        return value
+
+    def is_gameover(self):
+        """
+        Check to see whether the game is over based on the gamestate
+        """
+        gameover = False
+        for p in self.players:
+            if not p.units:  # TODO - include check for HQ/lab capture
+                gameover = True
+        return gameover
