@@ -52,13 +52,6 @@ class CO(ABC):
         self.factory_list = []
         for unit in UNITS:
             unit = unit(self.team_number)
-            
-            # Apply weapon damage
-            if unit.weapon is not None:
-                unit.weapon.set_attack[unit.id]
-            if unit.secondary_weapon is not None:
-                unit.secondary_weapon.set_attack[unit.id]
-
             self.factory_list.append(unit)
             
     
@@ -150,5 +143,5 @@ class CO(ABC):
     
 class BlankCO(CO):
     def __init__(self):
-        super.__init__()
+        super().__init__()
         logger.warning("Using BlankCO!")

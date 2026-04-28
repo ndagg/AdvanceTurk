@@ -103,25 +103,26 @@ TERRAIN_TYPES = [
     "Lab"]      #17
 
 # Terrain Defence
-TERRAIN_DEFENCE = {
-    "Plain": 10,
-    "Mountain": 40,
-    "Wood": 20,
-    "River": 0,
-    "Road": 0 ,
-    "Bridge": 0,
-    "Sea": 0,
-    "Shoal": 0,
-    "Reef": 10,
-    "City": 30,
-    "Base": 30,
-    "Airport": 30,
-    "Port": 30,
-    "HQ": 40,
-    "Pipe": 0,
-    "Silo": 30,
-    "Com Tower": 30,
-    "Lab": 30}
+TERRAIN_DEFENCE = [
+    10, # Plain
+    40, # Mountain
+    20, # Wood
+    0, # River
+    0, # Road
+    0, # Bridge
+    0, # Sea
+    0, # Shoal
+    10, # Reef
+    30, # City
+    30, # Base
+    30, # Airport
+    30, # Port
+    40, # HQ
+    0, # Pipe
+    30, # Silo
+    30, # Com Tower
+    30 # Lab
+    ]
 
 # Terrain Move Costs
 TERRAIN_COST = np.array([

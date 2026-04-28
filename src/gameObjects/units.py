@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from src.codeUtils.helpers import loc_2_gloc, gloc_2_loc
 from src.codeUtils.engineExceptions import EngineValueException
 
-logger = logging.getLogger("mainlog.units")
+logger = logging.getLogger("mainlogger.units")
 
 # =============================================================================
 # Weapons

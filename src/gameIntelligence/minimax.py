@@ -31,8 +31,8 @@ def minimax(gamestate: object,
     # Go through moves
     moves = gamestate.get_moves()
     logger.debug(f"{len(moves)} available moves")
-    for move in moves:
-        new_gamestate = gamestate.make_move(move)
+    for i, move in enumerate(moves):
+        new_gamestate = gamestate.make_move_on_new_state(move, i)
 
         # Recurse
         current_score, current_move = minimax(

@@ -46,7 +46,7 @@ def main():
     recon.set_loc((8, 13), gmap.dims)
     arty.set_loc((8, 12), gmap.dims)
 
-    player1 = Player(0, None, [inf, arty])
+    player1 = Player(0, None, [inf])#, arty])
     player2 = Player(1, None, [recon])
     umap = UnitMap(gmap, (player1, player2))
     gamestate = GameState([player1, player2], umap)

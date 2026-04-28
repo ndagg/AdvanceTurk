@@ -17,7 +17,7 @@ def calc_damage(
     Calculate the damage dealt range of an attack
     """
     # Get attack and defence values from COs
-    attack_high, attack_low = a_co.attack_calculator(a_unit, d_unit, a_terrain)
+    attack_high, attack_low = a_co.attack_calculator(a_unit=a_unit, d_unit=d_unit, a_terrain=a_terrain)
     unit_defence = d_co.defence_calculator(a_unit, d_unit, d_terrain)
 
     damage_high = (

@@ -24,6 +24,9 @@ class GameState():
         self.current_moves = []
 
     def get_moves(self):
+        """
+        Return the list of available moves for the current player
+        """
         self.current_moves = []
         for unit in self.current_player.units:
             if unit.active:
@@ -31,15 +34,22 @@ class GameState():
                     self.unit_map.generate_single_unit_moves(unit))
         return self.current_moves
 
-    def make_move(self, move: object) -> object:
-        logger.debug(f"Making move: {move}")
+    def make_move_on_new_state(self, original_move: object, ind: int) -> object:
+        """
+        Create a new gamestate and apply the effects of a Move to it
+        """
+        logger.debug(f"Making move: {original_move} - {original_move._id}")
+        new_gamestate = deepcopy(self)
+        move = new_gamestate.current_moves[ind]
+        logger.debug(f"Copied move: {move} - {move._id}")
+
         if move.attack_target is not None:
             a_survive, d_survive = self.make_attack(move)
             if a_survive:
                 self.unit_map.move_unit(move)
         else:
             self.unit_map.move_unit(move)
-        return deepcopy(self)  # TODO - Need to make deepcopy of unit before making the move, otherwise the effects of the move persist when moving back up in minimax
+        return new_gamestate
     
     def make_attack(self, move: object) -> tuple[bool]:
         """
@@ -49,8 +59,8 @@ class GameState():
         defender = move.attack_target
         attack_co = self.players[attacker.owner].co
         defend_co = self.players[defender.owner].co
-        attack_terrain = self.unit_map.super_graph[attacker.glocation]
-        defend_terrain = self.unit_map.super_graph[defender.glocation]
+        attack_terrain = self.unit_map.super_graph._node[attacker.glocation]['terrain']
+        defend_terrain = self.unit_map.super_graph._node[defender.glocation]['terrain']
 
         # TODO - consider random variance, and fucking Sonja
         hi, lo = calc_damage(
@@ -83,6 +93,9 @@ class GameState():
         return a_survive, d_survive
 
     def evaluate(self, evaluator: object) -> int:
+        """
+        Determine the value of the current player's position
+        """
         value = evaluator.evaluate(self.current_player)
         return value
 

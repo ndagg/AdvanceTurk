@@ -15,7 +15,7 @@ class Move():
         self.destination = destination
         self.fuel_cost = fuel
         self.attack_target = attack_target
+        self._id = hex(id(self))
     
     def __repr__(self):
         return f"Move(unit: {self.unit.__class__.__name__}, dest: {self.destination}, attack: {self.attack_target})"
-    
