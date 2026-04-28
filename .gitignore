@@ -5,3 +5,14 @@
 
 # Misc UV files
 uv.lock
+
+# Pycache files
+*__pycache__/
+*__pycache__/*
+.pyc
+
+# egg-info
+*.egg-info
+
+# logs
+*_log.txt
