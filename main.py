@@ -45,16 +45,12 @@ def main():
     inf.set_loc((7, 13), gmap.dims)
     recon.set_loc((8, 13), gmap.dims)
     arty.set_loc((8, 12), gmap.dims)
+    unit_lists =  [[inf, arty], [recon]]
 
-    player1 = Player(0, None, [inf])#, arty])
-    player2 = Player(1, None, [recon])
-    umap = UnitMap(gmap, (player1, player2))
-    gamestate = GameState([player1, player2], umap)
-
-
-    umap.set_current_player(player1)
-    umap.update_units_by_player(player2)
-    umap.update_units_by_player(player1)
+    player1 = Player(0)
+    player2 = Player(1)
+    umap = UnitMap(gmap)
+    gamestate = GameState([player1, player2], unit_lists, umap)
 
     score, move = minimax(gamestate, player1, 3, 0)
 

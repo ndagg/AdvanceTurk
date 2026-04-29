@@ -22,56 +22,35 @@ class UnitMap():
     ----------
     super_graph : DiGraph
         The terrain graph for the map
-    friendly_units : list
-        The list of friendly units to consider when calculating moves
-    pure_terrain_graphs : list of DiGraphs
+    terrain_graphs : list of DiGraphs
         The list of movement type graphs for the map
     dims : list
         The x and y dimensions of the map
     """
 
-    def __init__(self, base_map: object, players: list[object]):
+    def __init__(self, base_map: object):
         self.super_graph = base_map.super_graph
         self.pure_terrain_graphs = base_map.sub_graphs
         self.dims = base_map.dims
-        self.unit_lists = [i.units for i in players]
         self.terrain_graphs = []
 
         # TODO - add capture, load, hide, and delete moves
     
-    def set_current_player(self, player: object):
-        """
-        Set state of unit lists used for blocking/targets
-        """
-        logger.info(f"Current player is: {player.team}, {player.co}")
-        self.current_player = player.team
-        blocking = list(range(len(self.unit_lists)))
-        blocking.remove(player.team)
-        blocking_units = []
-        [blocking_units.extend(self.unit_lists[d]) for d in blocking]
-        self.blocking = blocking_units  # Will need updating if more than two teams are used
-        self.targets = blocking_units
-
-    def update_move_graphs(self):
+    def update_move_graphs(self, blocking_units: list[object]):
         """
         Update the movement graphs to account for occupied tiles
         """
         self.terrain_graphs = []
         for graph in self.pure_terrain_graphs:
             g = graph.copy()
-            for unit in self.blocking:
+            for unit in blocking_units:
                 if unit.glocation in g:
                     g.remove_node(unit.glocation)
             self.terrain_graphs.append(g)
 
-    def update_units_by_player(self, player: object):
-        """
-        Update a list of units and update the movement graphs accordingly
-        """
-        self.unit_lists[player.team] = player.units  # TODO - is this necessary? Can it just pass around a single persistent dict between the player and the unit map
-        self.update_move_graphs()
-
-    def generate_single_unit_moves(self, unit: object) -> tuple[list, list]:
+    def generate_single_unit_moves(
+            self, unit: object, targets: list[object], friendlies: list[object]
+            ) -> tuple[list, list]:
         """
         Generate a subgraph showing the possible moves for a unit
         """
@@ -85,7 +64,7 @@ class UnitMap():
             no_att, _ = nx.single_source_dijkstra(
                 movetype_graph, unit.glocation, cutoff=unit.move, weight='cost')
 
-            for i in self.unit_lists[unit.owner]:
+            for i in friendlies:
                 if i.glocation in no_att and i is not unit:
                     no_att.pop(i.glocation)
 
@@ -96,7 +75,7 @@ class UnitMap():
         # Get attackable tiles for direct units, this could be a lot more efficient
         att = []
         if unit.direct:
-            for eunit in self.targets:
+            for eunit in targets:
                 if not ANY_ATTACK[unit.id, eunit.id]:
                     continue  # skip if unit can't attack this type
                 for t in no_att:
@@ -108,7 +87,7 @@ class UnitMap():
         else:
             att_tiles = self.generate_indirect_attack_tiles(unit.glocation, unit.min_range, unit.max_range, self.dims)
             for t in att_tiles:
-                for eunit in self.targets:
+                for eunit in targets:
                     if not ANY_ATTACK[unit.id, eunit.id]:
                         continue  # skip if unit can't attack this type
                     if t == eunit.glocation:
@@ -124,9 +103,4 @@ class UnitMap():
             dims: tuple[int]) -> list:
         return get_indirect_attack_tiles(glocation, min_range, max_range, dims)
     
-    def move_unit(self, move: Move):
-        start = move.unit.glocation
-        move.unit.set_gloc(move.destination, self.dims)
-        move.unit.reduce_fuel(move.fuel_cost)
-        move.unit.active = False
         

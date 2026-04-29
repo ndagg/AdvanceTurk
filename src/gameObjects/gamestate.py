@@ -17,9 +17,11 @@ class GameState():
     def __init__(
             self,
             players: list[object],
+            unit_lists: list[list],
             unit_map: object):
         self.players = players
-        self.current_player = players[0]
+        self.unit_lists = unit_lists
+        self.current_player = players[0].player_number
         self.unit_map = unit_map
         self.current_moves = []
 
@@ -28,10 +30,14 @@ class GameState():
         Return the list of available moves for the current player
         """
         self.current_moves = []
-        for unit in self.current_player.units:
+        friendlies = self.unit_lists[self.current_player]
+        blocking_units = self.unit_lists[1-self.current_player]
+        self.unit_map.update_move_graphs(blocking_units)
+        for unit in friendlies:
             if unit.active:
                 self.current_moves.extend(
-                    self.unit_map.generate_single_unit_moves(unit))
+                    self.unit_map.generate_single_unit_moves(
+                        unit, blocking_units, friendlies))
         return self.current_moves
 
     def make_move_on_new_state(self, original_move: object, ind: int) -> object:
@@ -46,10 +52,18 @@ class GameState():
         if move.attack_target is not None:
             a_survive, d_survive = self.make_attack(move)
             if a_survive:
-                self.unit_map.move_unit(move)
+                self.move_unit(move)
         else:
-            self.unit_map.move_unit(move)
+            self.move_unit(move)
         return new_gamestate
+    
+    def move_unit(self, move: object):
+        """
+        Apply relocating (no attack) Move to a unit
+        """
+        move.unit.set_gloc(move.destination, self.unit_map.dims)
+        move.unit.reduce_fuel(move.fuel_cost)
+        move.unit.active = False
     
     def make_attack(self, move: object) -> tuple[bool]:
         """
@@ -104,7 +118,11 @@ class GameState():
         Check to see whether the game is over based on the gamestate
         """
         gameover = False
-        for p in self.players:
-            if not p.units:  # TODO - include check for HQ/lab capture
+        for p in self.unit_lists:
+            if not p:  # TODO - include check for HQ/lab capture
                 gameover = True
         return gameover
+    
+    def make_new_state(self):
+        pass
+
