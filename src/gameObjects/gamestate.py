@@ -47,7 +47,6 @@ class GameState():
         logger.debug(f"Making move: {original_move} - {original_move._id}")
         new_gamestate = self.make_new_state()
         move = new_gamestate.current_moves[ind]
-        logger.debug(f"Copied move: {move} - {move._id}")
 
         if move.attack_target is not None:
             a_survive, d_survive = self.make_attack(move)

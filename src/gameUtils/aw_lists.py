@@ -5,23 +5,21 @@ Created on Sat May 24 12:53:42 2025
 @author: ndagg
 """
 
-import numpy as np
-
 # Attack Lists - who can attack which unit types
-A_INF = np.array(range(0, 15))
-A_TANK = np.array(list(range(2, 13)) + list(range(19, 25)))
-A_MACHINEGUN = np.array([0, 1, 13, 14])
-A_GROUNDIND = np.array(list(range(0, 13)) + list(range(19, 25)))
-A_AA = np.array(range(0, 19))
-A_AIRONLY = np.array(range(13, 19))
-A_PIPERUNNER = np.array(range(0, 25))
-A_ALL = np.array(range(0, 25))
-A_CRUISERPRIMARY = np.array([19, 22, 24])
-A_SUB = np.array(range(19, 25))
+A_INF = list(range(0, 15))
+A_TANK = list(range(2, 13)) + list(range(19, 25))
+A_MACHINEGUN = [0, 1, 13, 14]
+A_GROUNDIND = list(range(0, 13)) + list(range(19, 25))
+A_AA = list(range(0, 19))
+A_AIRONLY = list(range(13, 19))
+A_PIPERUNNER = list(range(0, 25))
+A_ALL = list(range(0, 25))
+A_CRUISERPRIMARY = [19, 22, 24]
+A_SUB = list(range(19, 25))
 
 
 # Primary attack matrix
-PRIMARY_ATTACK = np.array([
+PRIMARY_ATTACK = [[
     [55, 45, 12, 14, 15, 5, 5, 25, 25, 1, 5, 1, 1, 30, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 85, 75, 70, 55, 65, 85, 85, 15, 55, 15, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [70, 65, 35, 45, 45, 6, 4, 28, 55, 1, 6, 1, 1, 35, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -47,9 +45,9 @@ PRIMARY_ATTACK = np.array([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 95, 25, 55, 55, 75],
     [95, 90, 90, 80, 80, 80, 85, 90, 85, 55, 80, 50, 25, 0, 0, 0, 0, 0, 0, 95, 95, 95, 95, 50, 60],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 115, 115, 100, 100, 100, 120, 0, 0, 0, 0, 0, 0]
-    ])
+    ]]
 
-SECONDARY_ATTACK = np.array([
+SECONDARY_ATTACK = [[
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [65, 55, 18, 20, 32, 6, 6, 35, 35, 1, 6, 1, 1, 35, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -75,7 +73,7 @@ SECONDARY_ATTACK = np.array([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ])
+    ]]
 
 ANY_ATTACK = PRIMARY_ATTACK + SECONDARY_ATTACK
 
@@ -125,7 +123,7 @@ TERRAIN_DEFENCE = [
     ]
 
 # Terrain Move Costs
-TERRAIN_COST = np.array([
+TERRAIN_COST = [[
 #   0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17
 #   Pl Mn Wo Ri Ro Br Se Sh Re Pi Si Ci Ba Ai Po HQ Co La
     [1, 2, 1, 2, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],  # Infantry     0
@@ -136,4 +134,4 @@ TERRAIN_COST = np.array([
     [0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],  # Naval        5
     [0, 0, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0],  # Littoral     6
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0]   # Piperunner   7
-    ])
+    ]]
