@@ -42,7 +42,7 @@ class UnitMap():
         """
         self.terrain_graphs = []
         for graph in self.pure_terrain_graphs:
-            g = graph.copy()
+            g = graph.copy()  # Is this sufficient, or is deepcopy needed?
             for unit in blocking_units:
                 if unit.glocation in g:
                     g.remove_node(unit.glocation)
@@ -103,4 +103,3 @@ class UnitMap():
             dims: tuple[int]) -> list:
         return get_indirect_attack_tiles(glocation, min_range, max_range, dims)
     
-        

@@ -19,6 +19,7 @@ from src.codeUtils.plotting import (
     )
 
 from src.gameIntelligence.minimax import minimax
+from src.gameIntelligence.evaluator import PureValueEvaluator
 
 def main():
 
@@ -52,7 +53,7 @@ def main():
     umap = UnitMap(gmap)
     gamestate = GameState([player1, player2], unit_lists, umap)
 
-    score, move = minimax(gamestate, player1, 3, 0)
+    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 

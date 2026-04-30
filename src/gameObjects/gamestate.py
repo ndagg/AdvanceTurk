@@ -4,7 +4,7 @@ Created on Wed Apr 08 20:27:07 2026
 
 @author: ndagg
 """
-from copy import deepcopy
+from copy import copy, deepcopy
 import logging
 
 from src.gameObjects.moves import Move
@@ -45,7 +45,7 @@ class GameState():
         Create a new gamestate and apply the effects of a Move to it
         """
         logger.debug(f"Making move: {original_move} - {original_move._id}")
-        new_gamestate = deepcopy(self)
+        new_gamestate = self.make_new_state()
         move = new_gamestate.current_moves[ind]
         logger.debug(f"Copied move: {move} - {move._id}")
 
@@ -86,7 +86,10 @@ class GameState():
             defend_co
             )
         expected = (hi+lo)//2
+        logger.debug(f"{attacker} damages {defender} for {expected} damage")
+
         d_survive = defender.take_damage(expected)
+        logger.info(f"{defender} survives: {d_survive}")
 
         if d_survive and attacker.direct:
             hi, lo = calc_damage(
@@ -100,9 +103,9 @@ class GameState():
             expected = (hi+lo)//2
             a_survive = attacker.take_damage(expected)
             if not a_survive:
-                self.players[attacker.owner].units.remove(attacker)
+                self.unit_lists[attacker.owner].remove(attacker)
         else:
-            self.players[defender.owner].units.remove(defender)
+            self.unit_lists[defender.owner].remove(defender)
         
         return a_survive, d_survive
 
@@ -110,7 +113,7 @@ class GameState():
         """
         Determine the value of the current player's position
         """
-        value = evaluator.evaluate(self.current_player)
+        value = self.players[self.current_player].evaluate()  # TODO - work out how to handle evaluators
         return value
 
     def is_gameover(self):
@@ -123,6 +126,18 @@ class GameState():
                 gameover = True
         return gameover
     
-    def make_new_state(self):
-        pass
+    def make_new_state(self) -> object:
+        """
+        Duplicate the current gamestate, deepcopying required attributes
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        # Direct references
+        new.players = self.players
+        new.current_player = self.current_player
+        new.unit_map = self.unit_map
+        # Deep copies
+        new.current_moves = deepcopy(self.current_moves)
+        new.unit_lists = deepcopy(self.unit_lists)
+        return new
 
