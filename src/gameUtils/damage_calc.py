@@ -5,6 +5,9 @@ Created on Tue May 20 17:27:30 2025
 @author: ndagg
 """
 
+def round_partial(value: float, resolution: float):
+    return round(value / resolution) * resolution
+
 def calc_damage(
         a_unit: object, 
         d_unit: object,
@@ -22,13 +25,23 @@ def calc_damage(
 
     damage_high = (
         attack_high
-        * a_unit.vhp
-        * (200 - unit_defence * d_unit.vhp)/100)
+        * a_unit.vhp/10
+        * (200 - unit_defence)/100)
 
     damage_low = (
         attack_low
-        * a_unit.vhp
-        * (200 - unit_defence * d_unit.vhp)/100)
+        * a_unit.vhp/10
+        * (200 - unit_defence)/100)
+    
+    # Rounding steps
+    if damage_high < 0:
+        damage_high = 0
+    damage_high = round_partial(damage_high, 0.05)
+    damage_high = int(damage_high)
+    if damage_low < 0:
+        damage_low = 0
+    damage_low = round_partial(damage_low, 0.05)
+    damage_low = int(damage_low)
 
     a_range = [damage_low, damage_high]
     return a_range

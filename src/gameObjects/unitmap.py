@@ -76,7 +76,7 @@ class UnitMap():
         att = []
         if unit.direct:
             for eunit in targets:
-                if not ANY_ATTACK[unit.id, eunit.id]:
+                if not ANY_ATTACK[unit.id][eunit.id]:
                     continue  # skip if unit can't attack this type
                 for t in no_att:
                     attacks = self.super_graph.neighbors(t.destination)
@@ -88,7 +88,7 @@ class UnitMap():
             att_tiles = self.generate_indirect_attack_tiles(unit.glocation, unit.min_range, unit.max_range, self.dims)
             for t in att_tiles:
                 for eunit in targets:
-                    if not ANY_ATTACK[unit.id, eunit.id]:
+                    if not ANY_ATTACK[unit.id][eunit.id]:
                         continue  # skip if unit can't attack this type
                     if t == eunit.glocation:
                         att.append(Move(unit, unit.gloc, 0, eunit))

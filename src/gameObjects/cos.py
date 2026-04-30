@@ -110,9 +110,9 @@ class CO(ABC):
         Calculate the default attack range during a combat
         """
         if a_unit.ammo:
-            weapon_attack = PRIMARY_ATTACK[a_unit.id, d_unit.id]
+            weapon_attack = PRIMARY_ATTACK[a_unit.id][d_unit.id]
         else:
-            weapon_attack = SECONDARY_ATTACK[a_unit.id, d_unit.id]
+            weapon_attack = SECONDARY_ATTACK[a_unit.id][d_unit.id]
         
         unit_attack = self.co_attack[a_unit.id]
         if self.co_power_active or self.super_power_active:
@@ -138,7 +138,7 @@ class CO(ABC):
         if self.co_power_active or self.super_power_active:
             unit_defence += 10
         
-        defence = unit_defence + TERRAIN_DEFENCE[d_terrain]
+        defence = unit_defence + TERRAIN_DEFENCE[d_terrain] * d_unit.vhp
         return defence
     
 class BlankCO(CO):

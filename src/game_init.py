@@ -16,7 +16,7 @@ class GameReader:
     A class for fetching and interpreting game data from amarriner.com
     """
     def __init__(self, driver=None):
-        if driver == None:
+        if driver is None:
             self.driver = webdriver.Firefox
         else:
             self.driver = driver
