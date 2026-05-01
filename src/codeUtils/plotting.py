@@ -102,7 +102,6 @@ def add_edge_labels(graph, ax, key):
     return ax
     
     
-
 def plot_map_image(base_map, ax=None):
     sprites = Image.open("images/spritesheet_buildings.png")
     sprites = np.array(sprites)
@@ -144,3 +143,5 @@ def plot_map_image(base_map, ax=None):
     return ax
     
     
+def plot_units_on_map(units, ax):
+    pass
