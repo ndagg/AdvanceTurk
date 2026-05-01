@@ -49,11 +49,11 @@ class GameState():
         move = new_gamestate.current_moves[ind]
 
         if move.attack_target is not None:
-            a_survive, d_survive = self.make_attack(move)
+            a_survive, d_survive = new_gamestate.make_attack(move)
             if a_survive:
-                self.move_unit(move)
+                new_gamestate.move_unit(move)
         else:
-            self.move_unit(move)
+            new_gamestate.move_unit(move)
         return new_gamestate
     
     def move_unit(self, move: object):
@@ -104,6 +104,7 @@ class GameState():
             if not a_survive:
                 self.unit_lists[attacker.owner].remove(attacker)
         else:
+            a_survive = True
             self.unit_lists[defender.owner].remove(defender)
         
         return a_survive, d_survive
@@ -135,8 +136,8 @@ class GameState():
         new.players = self.players
         new.current_player = self.current_player
         new.unit_map = self.unit_map
-        # Deep copies
-        new.current_moves = deepcopy(self.current_moves)
-        new.unit_lists = deepcopy(self.unit_lists)
+        # Deep copies - done as single dict so that units in moves and lists match
+        dcs = {k:self.__dict__[k] for k in ("current_moves", "unit_lists")}
+        new.__dict__.update(deepcopy(dcs))
         return new
 

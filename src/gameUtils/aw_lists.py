@@ -102,24 +102,24 @@ TERRAIN_TYPES = [
 
 # Terrain Defence
 TERRAIN_DEFENCE = [
-    10, # Plain
-    40, # Mountain
-    20, # Wood
+    1, # Plain
+    4, # Mountain
+    2, # Wood
     0, # River
     0, # Road
     0, # Bridge
     0, # Sea
     0, # Shoal
-    10, # Reef
-    30, # City
-    30, # Base
-    30, # Airport
-    30, # Port
-    40, # HQ
+    1, # Reef
+    3, # City
+    3, # Base
+    3, # Airport
+    3, # Port
+    4, # HQ
     0, # Pipe
-    30, # Silo
-    30, # Com Tower
-    30 # Lab
+    3, # Silo
+    3, # Com Tower
+    3 # Lab
     ]
 
 # Terrain Move Costs

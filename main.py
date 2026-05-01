@@ -8,7 +8,7 @@ from src.gameObjects.player import Player
 from src.gameObjects.gamemap import BaseMap
 from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.gamestate import GameState
-from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
+from src.gameObjects.units import Infantry, Recon, Artillery, Tank
 
 from src.codeUtils.log_helpers import logger
 from src.codeUtils.plotting import (
@@ -40,13 +40,17 @@ def main():
     gmap = reader.generate_basemap()
 
 
+    tank = Tank(0)
     inf = Infantry(0)
     recon = Recon(1)
-    arty = Artillery(0)
-    inf.set_loc((7, 13), gmap.dims)
+    # arty = Artillery(0)
+    inf.set_loc((8, 12), gmap.dims)
+    tank.set_loc((7, 13), gmap.dims)
     recon.set_loc((8, 13), gmap.dims)
-    arty.set_loc((8, 12), gmap.dims)
-    unit_lists =  [[inf, arty], [recon]]
+    # arty.set_loc((8, 12), gmap.dims)
+    unit_lists =  [[tank, inf], [recon]]
+    tank.fuel = 1
+    inf.fuel = 1
 
     player1 = Player(0)
     player2 = Player(1)
@@ -57,7 +61,7 @@ def main():
 
 
 
-    print("bot complete")
+    print(f"bot complete: {score}, {move}")
 
 
 

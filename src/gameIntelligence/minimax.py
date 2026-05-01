@@ -24,7 +24,7 @@ def minimax(gamestate: object,
     
     # Otherwise bubble up
     best_move = None
-    if gamestate.current_player == player:
+    if gamestate.current_player == player.player_number:
         best_score = -1e10
     else:
         best_score = 1e10
@@ -32,6 +32,8 @@ def minimax(gamestate: object,
     # Go through moves
     moves = gamestate.get_moves()
     logger.debug(f"{len(moves)} available moves")
+    if not moves:
+        return evaluator.evaluate(gamestate), best_move
     for i, move in enumerate(moves):
         new_gamestate = gamestate.make_move_on_new_state(move, i)
 
@@ -47,13 +49,13 @@ def minimax(gamestate: object,
         logger.info(f"Exiting minimax, score: {current_score}, depth: {current_depth}")
         
         # Update best score
-        if gamestate.current_player == player:
+        if gamestate.current_player == player.player_number:
             if current_score > best_score:
                 logger.info(f"New best score: {current_score}, previous score: {best_score}")
                 best_score = current_score
                 best_move = move
         else:
-            if current_score < best_score:
+            if current_score <= best_score:
                 logger.debug(f"No improvement, current score: {best_score}, discarded score: {current_score}")
                 best_score = current_score
                 best_move = move
