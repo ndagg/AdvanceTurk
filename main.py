@@ -1,6 +1,7 @@
+#%%
+
 import logging
 from bs4 import BeautifulSoup
-from copy import deepcopy
 
 from src.game_init import GameReader
 
@@ -51,11 +52,17 @@ def main():
     unit_lists =  [[tank, inf], [recon]]
     tank.fuel = 1
     inf.fuel = 1
+    recon.fuel = 4
 
     player1 = Player(0)
     player2 = Player(1)
     umap = UnitMap(gmap)
     gamestate = GameState([player1, player2], unit_lists, umap)
+
+    gamestate.get_moves()
+ 
+    ax = plot_map_image(gmap)
+    ax = plot_moves(gamestate, tank, gmap.dims, ax)
 
     score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
@@ -67,3 +74,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%

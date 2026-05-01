@@ -93,7 +93,7 @@ class GameState():
         logger.debug(f"{attacker} damages {defender} for {expected} damage")
 
         d_survive = defender.take_damage(expected)
-        logger.info(f"{defender} survives: {d_survive}")
+        logger.debug(f"{defender} survives: {d_survive}")
 
         if d_survive and attacker.direct:
             hi, lo = calc_damage(

@@ -16,6 +16,8 @@ from src.gameUtils.aw_lists import TERRAIN_TYPES
 from src.codeUtils.constants import TILEPX, TILEHF
 from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 
+from src.gameObjects.moves import Move
+
 
 def alpha_blend(foreground, background):
     fore_rgb = foreground[...,:3]
@@ -57,11 +59,12 @@ def plot_map_graph(graph, ax=None):
     
     return ax
 
-def plot_moves(moves, dims, ax=None, over_img=True):
+def plot_moves(gamestate, unit, dims, ax=None, over_img=True):
     if ax is None:
         fig, ax = plt.subplots()
     
-    pos = [gloc_2_loc(move, dims) for move in moves]
+    moves = [move for move in gamestate.current_moves if type(move) is Move and move.unit == unit ]
+    pos = [gloc_2_loc(move.destination, dims) for move in moves]
     
     if over_img:
         img = [i for i in ax._children

@@ -20,7 +20,7 @@ class Move(Action):
     """
     
     def __init__(self, unit: object, destination: int, fuel: int, attack_target: object=None):
-        super().__init__(self)
+        super().__init__()
         self.unit = unit
         self.destination = destination
         self.fuel_cost = fuel
@@ -35,7 +35,10 @@ class EndTurn(Action):
     A class for representing an end turn
     """
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
+
+    def __repr__(self):
+        return "End turn"
 
 
 class Cature(Action):
@@ -43,7 +46,7 @@ class Cature(Action):
     A class for representing infantry captures
     """
     def __init__(self, unit: object):
-        super().__init__(self)
+        super().__init__()
         # TODO - Gamestate will have to track captures
 
 
@@ -52,21 +55,23 @@ class COPower(Action):
     A class for representing COPower activations
     """
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         # TODO
+
 
 class SuperPower(Action):
     """
     A class for representing super-power activations
     """
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         # TODO
+
 
 class BuildUnit(Action):
     """
     A class for representing creating new units
     """
     def __init__(self, unit_type: type, tile: int):
-        super().__init__(self)
+        super().__init__()
         # TODO
