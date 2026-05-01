@@ -7,7 +7,7 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
-from src.gameObjects.moves import Move
+from src.gameObjects.moves import Move, EndTurn
 from src.gameUtils.damage_calc import calc_damage
 
 logger = logging.getLogger("mainlogger.gamestate")
@@ -38,6 +38,7 @@ class GameState():
                 self.current_moves.extend(
                     self.unit_map.generate_single_unit_moves(
                         unit, blocking_units, friendlies))
+        self.current_moves.append(EndTurn())
         return self.current_moves
 
     def make_move_on_new_state(self, original_move: object, ind: int) -> object:
@@ -47,6 +48,10 @@ class GameState():
         logger.debug(f"Making move: {original_move} - {original_move._id}")
         new_gamestate = self.make_new_state()
         move = new_gamestate.current_moves[ind]
+
+        if type(move) is EndTurn:
+            new_gamestate.current_player = 1 - new_gamestate.current_player
+            return new_gamestate
 
         if move.attack_target is not None:
             a_survive, d_survive = new_gamestate.make_attack(move)
