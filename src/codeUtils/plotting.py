@@ -16,6 +16,9 @@ from src.gameUtils.aw_lists import TERRAIN_TYPES
 from src.codeUtils.constants import TILEPX, TILEHF
 from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 
+from src.gameObjects.moves import Move
+from src.gameObjects.units import UNITS
+
 
 def alpha_blend(foreground, background):
     fore_rgb = foreground[...,:3]
@@ -39,10 +42,14 @@ def alpha_blend(foreground, background):
     return outRGBA
 
 
-def get_pixel_pos(pos):
-    return {
-        k: [v[0]*TILEPX + TILEHF, v[1]*TILEPX + TILEHF]
-        for k, v in pos.items()}
+def get_pixel_pos(pos):  # TODO - WTF is going on with this?
+    if type(pos) is dict:
+        return {
+            k: [v[0]*TILEPX + TILEHF, v[1]*TILEPX + TILEHF]
+            for k, v in pos.items()}
+    else:
+        return pos[0]*TILEPX + TILEHF, pos[1]*TILEPX + TILEHF
+            
 
 
 def plot_map_graph(graph, ax=None):
@@ -57,11 +64,12 @@ def plot_map_graph(graph, ax=None):
     
     return ax
 
-def plot_moves(moves, dims, ax=None, over_img=True):
+def plot_moves(gamestate, unit, dims, ax=None, over_img=True):
     if ax is None:
         fig, ax = plt.subplots()
     
-    pos = [gloc_2_loc(move, dims) for move in moves]
+    moves = [move for move in gamestate.current_moves if type(move) is Move and move.unit == unit ]
+    pos = [gloc_2_loc(move.destination, dims) for move in moves]
     
     if over_img:
         img = [i for i in ax._children
@@ -76,6 +84,8 @@ def plot_moves(moves, dims, ax=None, over_img=True):
                 blue, img._A[x: x+TILEPX, y: y+TILEPX])
         
         ax.imshow(img._A)
+        # Remove old ax child so that the ax can be further built on
+        ax._children = [ax._children[-1]]
         
     else:
         pos = get_pixel_pos(pos)
@@ -99,7 +109,6 @@ def add_edge_labels(graph, ax, key):
     return ax
     
     
-
 def plot_map_image(base_map, ax=None):
     sprites = Image.open("images/spritesheet_buildings.png")
     sprites = np.array(sprites)
@@ -141,3 +150,30 @@ def plot_map_image(base_map, ax=None):
     return ax
     
     
+def plot_units_on_map(units, ax):
+    sprites = Image.open("images/spritesheet_units.png")
+    sprites = np.array(sprites)
+
+    img_list = []
+    height = TILEPX
+    start = 0
+    end = TILEPX
+    for i, t in enumerate(UNITS):
+        img_list.append(sprites[start:end, :, :])
+        start += height
+        end += height
+
+    to_draw = [[img_list[i.id], i.location, i.owner] for i in units]
+
+    img = [i for i in ax._children
+            if type(i) is matplotlib.image.AxesImage][0]
+    
+    for i in to_draw:
+        if i[2] == 1:
+            i[0] = i[0][:, :, [2, 1, 0, 3]]
+        x, y = i[1][1] * TILEPX, i[1][0] * TILEPX
+        img._A[x: x+TILEPX, y: y+TILEPX] = alpha_blend(
+                i[0], img._A[x: x+TILEPX, y: y+TILEPX])
+    
+    ax.imshow(img._A)
+    return ax

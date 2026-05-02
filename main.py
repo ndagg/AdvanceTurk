@@ -1,6 +1,7 @@
+#%%
+
 import logging
 from bs4 import BeautifulSoup
-from copy import deepcopy
 
 from src.game_init import GameReader
 
@@ -8,17 +9,19 @@ from src.gameObjects.player import Player
 from src.gameObjects.gamemap import BaseMap
 from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.gamestate import GameState
-from src.gameObjects.units import Infantry, Recon, Artillery, Rocket
+from src.gameObjects.units import Infantry, Recon, Artillery, Tank
 
 from src.codeUtils.log_helpers import logger
 from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
     plot_moves,
-    add_edge_labels
+    add_edge_labels,
+    plot_units_on_map
     )
 
 from src.gameIntelligence.minimax import minimax
+from src.gameIntelligence.evaluator import PureValueEvaluator
 
 def main():
 
@@ -39,30 +42,39 @@ def main():
     gmap = reader.generate_basemap()
 
 
+    tank = Tank(0)
     inf = Infantry(0)
     recon = Recon(1)
-    arty = Artillery(0)
-    inf.set_loc((7, 13), gmap.dims)
+    # arty = Artillery(0)
+    inf.set_loc((8, 12), gmap.dims)
+    tank.set_loc((7, 13), gmap.dims)
     recon.set_loc((8, 13), gmap.dims)
-    arty.set_loc((8, 12), gmap.dims)
+    # arty.set_loc((8, 12), gmap.dims)
+    unit_lists =  [[tank, inf], [recon]]
+    tank.fuel = 1
+    inf.fuel = 1
+    recon.fuel = 4
 
-    player1 = Player(0, None, [inf, arty])
-    player2 = Player(1, None, [recon])
-    umap = UnitMap(gmap, (player1, player2))
-    gamestate = GameState([player1, player2], umap)
+    player1 = Player(0)
+    player2 = Player(1)
+    umap = UnitMap(gmap)
+    gamestate = GameState([player1, player2], unit_lists, umap)
+
+    gamestate.get_moves()
+ 
+    ax = plot_map_image(gmap)
+    ax = plot_moves(gamestate, tank, gmap.dims, ax)
+    ax = plot_units_on_map([tank, inf, recon], ax)
+
+    # score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
-    umap.set_current_player(player1)
-    umap.update_units_by_player(player2)
-    umap.update_units_by_player(player1)
 
-    score, move = minimax(gamestate, player1, 3, 0)
-
-
-
-    print("bot complete")
+    # print(f"bot complete: {score}, {move}")
 
 
 
 if __name__ == "__main__":
     main()
+
+# %%

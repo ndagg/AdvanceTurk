@@ -25,19 +25,19 @@ class PureValueEvaluator(Evaluator):
     """
     A basic Evaluator taking only unit value into account
     """
-
-    def __init__(self, players: list[object]):
-        self.players = players
+    def __init__(self):
+        pass
 
     def unit_value(self, unit):
         value = unit.cost * unit.hp/100
+        return value
 
-    def evaluate(self, player: object) -> int:
+    def evaluate(self, gamestate: object) -> int:
         # Negative value is sum of oppositions' units
-        opposing = [p for p in self.players if p.team != player.team]
-        opposing_value = sum(sum(self.unit_value(u) for u in p.units.values()) for p in opposing)
+        opposing = gamestate.unit_lists[1 - gamestate.current_player]
+        opposing_value = sum(self.unit_value(u) for u in opposing)
 
-        own = [p for p in self.players if p.team == player.team]
-        own_value = sum(sum(self.unit_value(u) for u in p.units.values()) for p in own)
+        own = gamestate.unit_lists[gamestate.current_player]
+        own_value = sum(self.unit_value(u) for u in own)
 
         return own_value - opposing_value

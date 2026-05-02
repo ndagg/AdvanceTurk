@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from src.codeUtils.helpers import loc_2_gloc, gloc_2_loc
 from src.codeUtils.engineExceptions import EngineValueException
 
-logger = logging.getLogger("mainlog.units")
+logger = logging.getLogger("mainlogger.units")
 
 # =============================================================================
 # Weapons
@@ -145,6 +145,7 @@ class Unit(ABC):
             return False
         self.hp -= amount
         self.vhp = -(self.hp // -10)  # Upside-down floor probably overkill, but avoids floats
+        return True
 
     def reduce_fuel(self, amount):
         if self.fuel - amount < 0:
@@ -165,7 +166,7 @@ class Unit(ABC):
         self.location = gloc_2_loc(gloc, dims)
  
     def __repr__(self):
-        outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.vhp}"
+        outstr = f"{self.__class__.__name__}, Location: {self.glocation}, HP: {self.hp}"
         return outstr
 
 

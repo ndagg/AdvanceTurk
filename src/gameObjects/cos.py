@@ -52,13 +52,6 @@ class CO(ABC):
         self.factory_list = []
         for unit in UNITS:
             unit = unit(self.team_number)
-            
-            # Apply weapon damage
-            if unit.weapon is not None:
-                unit.weapon.set_attack[unit.id]
-            if unit.secondary_weapon is not None:
-                unit.secondary_weapon.set_attack[unit.id]
-
             self.factory_list.append(unit)
             
     
@@ -117,9 +110,9 @@ class CO(ABC):
         Calculate the default attack range during a combat
         """
         if a_unit.ammo:
-            weapon_attack = PRIMARY_ATTACK[a_unit.id, d_unit.id]
+            weapon_attack = PRIMARY_ATTACK[a_unit.id][d_unit.id]
         else:
-            weapon_attack = SECONDARY_ATTACK[a_unit.id, d_unit.id]
+            weapon_attack = SECONDARY_ATTACK[a_unit.id][d_unit.id]
         
         unit_attack = self.co_attack[a_unit.id]
         if self.co_power_active or self.super_power_active:
@@ -145,10 +138,10 @@ class CO(ABC):
         if self.co_power_active or self.super_power_active:
             unit_defence += 10
         
-        defence = unit_defence + TERRAIN_DEFENCE[d_terrain]
+        defence = unit_defence + TERRAIN_DEFENCE[d_terrain] * d_unit.vhp
         return defence
     
 class BlankCO(CO):
     def __init__(self):
-        super.__init__()
+        super().__init__()
         logger.warning("Using BlankCO!")

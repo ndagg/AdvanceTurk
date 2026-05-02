@@ -16,7 +16,7 @@ class MyFormatter(logging.Formatter):
         msg = logging.Formatter.format(self, record)
 
         msg = msg.replace("mainlogger.", "")
-        preamble, msg = msg.split("-")
+        preamble, msg = msg.split("#")
         preamble = preamble + " " * (20 - len(preamble))
         msg = preamble + indent + "-" + msg
 
@@ -35,7 +35,7 @@ handler = logging.FileHandler("main_log.txt")
 handler.setLevel(logging.DEBUG)
 
 # Create formatter with desired format
-formatter = MyFormatter('%(levelname)s::%(name)s - %(message)s')
+formatter = MyFormatter('%(levelname)s::%(name)s # %(message)s')
 handler.setFormatter(formatter)
 
 # Add handler to logger
