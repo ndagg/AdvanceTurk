@@ -16,7 +16,8 @@ from src.codeUtils.plotting import (
     plot_map_graph,
     plot_map_image,
     plot_moves,
-    add_edge_labels
+    add_edge_labels,
+    plot_units_on_map
     )
 
 from src.gameIntelligence.minimax import minimax
@@ -63,12 +64,13 @@ def main():
  
     ax = plot_map_image(gmap)
     ax = plot_moves(gamestate, tank, gmap.dims, ax)
+    ax = plot_units_on_map([tank, inf, recon], ax)
 
-    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
+    # score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 
-    print(f"bot complete: {score}, {move}")
+    # print(f"bot complete: {score}, {move}")
 
 
 
