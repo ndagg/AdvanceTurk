@@ -5,6 +5,9 @@ Created on Sat Nov  8 15:52:24 2025
 @author: ndagg
 """
 
+from src.gameObjects.buildings import Building
+from src.gameObjects.units import Unit
+
 class Action():
     """
     An abstract class covering each of the possible player actions
@@ -48,10 +51,11 @@ class Capture(Action):
     """
     A class for representing infantry captures
     """
-    def __init__(self, unit: object):
+    def __init__(self, move: Move, building: Building):
         super().__init__()
-        # TODO - Gamestate will have to track captures
-
+        self.unit = move.unit
+        self.fuel_cost = move.fuel_cost
+        self.building = building
 
 class COPower(Action):
     """

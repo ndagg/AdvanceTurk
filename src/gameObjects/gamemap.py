@@ -14,6 +14,7 @@ from src.gameUtils.aw_lists import (
     )
 
 from src.gameObjects.buildings import (
+    Building,
     Base, 
     Airport, 
     Port, 
@@ -46,7 +47,7 @@ class BaseMap():
         self.super_graph, self.sub_graphs= self.generate_move_type_graphs()
 
         # Generate buildings list
-        self.buildings_list = self.generate_buildings_list()
+        self.buildings_dict = self.generate_buildings_dict()
         
 
     def populate_terrain_array(self, terrain_dict: dict, building_dict: dict):
@@ -146,12 +147,12 @@ class BaseMap():
         
         return super_graph, sub_graphs
                 
-    def generate_buildings_list(self) -> list[tuple[int]]:
-        buildings_list = []
+    def generate_buildings_dict(self) -> dict[int: Building]:
+        buildings_dict = {}
         b_inds = {11: City, 12: Base, 13: Airport, 14: Port, 15: HQ, 16: ComTower, 17: Lab}
         # Iterate over 'wheels' movement type as it is a short list which contains all buildings
         for gloc, tile in self.sub_graphs[2]._node.items():
             if tile["terrain"] in b_inds.keys():
-                buildings_list.append(b_inds[tile["terrain"]](gloc))
-        return buildings_list
+                buildings_dict[gloc] = b_inds[tile["terrain"]](gloc)
+        return buildings_dict
             

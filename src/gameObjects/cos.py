@@ -26,7 +26,7 @@ class CO(ABC):
     co_power_cost = 0
     super_power_cost = 0
     
-    team_number = 0
+    team = 0
     
     funds_per_prop = 1000
     
@@ -43,9 +43,10 @@ class CO(ABC):
     
     funds = 0
     
-    def __init__(self):
+    def __init__(self, team: int):
         self.unit_factory_init()
-        
+        self.team = team
+
     def unit_factory_init(self):
         """
         Initialise the unit factory by creating a default unit list for the co

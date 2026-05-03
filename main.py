@@ -58,9 +58,10 @@ def main():
     player1 = Player(0)
     player2 = Player(1)
     umap = UnitMap(gmap)
-    gamestate = GameState([player1, player2], unit_lists, umap)
+    buildings_dict = gmap.buildings_dict
+    gamestate = GameState([player1, player2], unit_lists, buildings_dict, umap)
 
-    gamestate.get_moves()
+    gamestate.get_actions()
  
     ax = plot_map_image(gmap)
     ax = plot_moves(gamestate, tank, gmap.dims, ax)

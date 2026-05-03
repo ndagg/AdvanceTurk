@@ -9,6 +9,8 @@ import logging
 
 from src.gameObjects.actions import Action, Move, EndTurn, Capture
 from src.gameObjects.player import Player
+from src.gameObjects.buildings import Building
+
 from src.gameUtils.damage_calc import calc_damage
 
 logger = logging.getLogger("mainlogger.gamestate")
@@ -21,10 +23,12 @@ class GameState():
             self,
             players: list[Player],
             unit_lists: list[list],
+            buildings_dict: dict[int: Building],
             unit_map: object):
         # Stateful - needs deepcopy
         self.players = players
         self.current_player = players[0]
+        self.buildings_dict = buildings_dict
         self.unit_lists = unit_lists
         self.current_actions = []
 
@@ -38,18 +42,21 @@ class GameState():
         Return the list of available actions for the player
         """
         # Regular moves
-        self.current_actions = self.get_moves()
+        moves = self.get_moves()
 
         # Captures
+        captures =(self.get_captures(moves))
 
         # CO Powers
-        self.current_actions.extend(
-            self.current_player.co.powers_available())
+        powers = self.current_player.co.powers_available()
+
+        actions = moves + captures + powers
         
         # End turn
-        self.current_actions.append(EndTurn())
-        
+        actions.append(EndTurn())
 
+        self.current_actions = actions
+        
     def get_moves(self) -> list[Move]:
         """
         Return the list of available moves for the current player
@@ -70,30 +77,36 @@ class GameState():
         """
         Return a list of available captures for the current player
         """
-        cap_moves = []
+        cap_actions = []
         for m in moves:
+            dest = m.destination
             if m.unit.id < 2 and m.attack_target is None:
-                if m.destination:
-                    pass
+                if dest in self.buildings_dict.keys():
+                    if self.buildings_dict[dest].owner != self.current_player_id:
+                        cap_actions.append(Capture(m, self.buildings_dict[dest]))
 
-    def make_move_on_new_state(self, original_move: object, ind: int) -> object:
+    def make_action_on_new_state(self, original_action: object, ind: int) -> object:
         """
         Create a new gamestate and apply the effects of a Move to it
         """
-        logger.debug(f"Making move: {original_move} - {original_move._id}")
+        logger.debug(f"Making move: {original_action} - {original_action._id}")
         new_gamestate = self.make_new_state()
-        move = new_gamestate.current_moves[ind]
+        action = new_gamestate.current_actions[ind]
 
-        if type(move) is EndTurn:
+        
+        if type(action) is Move:
+            if action.attack_target is not None:
+                a_survive, d_survive = new_gamestate.make_attack(action)
+                if a_survive:
+                    new_gamestate.move_unit(action)
+            else:
+                new_gamestate.move_unit(action)
+        
+        elif type(action) is Capture:
+            new_gamestate
+
+        elif type(action) is EndTurn:
             new_gamestate.current_player = 1 - new_gamestate.current_player
-            return new_gamestate
-
-        if move.attack_target is not None:
-            a_survive, d_survive = new_gamestate.make_attack(move)
-            if a_survive:
-                new_gamestate.move_unit(move)
-        else:
-            new_gamestate.move_unit(move)
         return new_gamestate
     
     def move_unit(self, move: object):
@@ -149,6 +162,14 @@ class GameState():
         
         return a_survive, d_survive
 
+    def make_capture(self, capture: Capture):
+        """
+        Apply the effects of a capture action
+        """
+        cap_delta = capture.unit.capture_power * capture.unit.vhp
+        capped = capture.building.capture(cap_delta, self.current_player_id)
+        # TODO - include effect on player income or other
+
     def evaluate(self, evaluator: object) -> int:
         """
         Determine the value of the current player's position
@@ -178,7 +199,8 @@ class GameState():
         # Deep copies - done as single dict so that units in actions and lists match
         dcs = {k:self.__dict__[k] for k in (
             "current_actions", 
-            "unit_lists", 
+            "unit_lists",
+            "buildings_list",
             "players", 
             "current_player")}
         new.__dict__.update(deepcopy(dcs))
