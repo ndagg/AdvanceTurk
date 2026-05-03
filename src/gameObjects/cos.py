@@ -16,33 +16,31 @@ from src.gameUtils.aw_lists import (
 
 from src.gameObjects.units import Unit, ARCHETYPES, UNITS
 from src.gameObjects.actions import Action, SuperPower, COPower
+from src.gameObjects.gamestate import GameState
 
 logger = logging.getLogger("mainlogger.cos")
 
 
 class CO(ABC):
     
+    team = 0
+    
     power_meter = 0
     co_power_cost = 0
     super_power_cost = 0
-    
-    team = 0
-    
-    funds_per_prop = 1000
-    
-    co_attack = [100] * 25
-    co_defence = [100] * 25
-    
     co_power_active = False
     super_power_active = False
     
+    co_attack = [100] * 25
+    co_defence = [100] * 25
     luck = 9
     bad_luck = 0
-    
     com_towers = 0
     
+    funds_per_prop = 1000
     funds = 0
-    
+    num_income_buildings = 0
+
     def __init__(self, team: int):
         self.unit_factory_init()
         self.team = team
@@ -62,10 +60,6 @@ class CO(ABC):
         Create a unit with the default stats
         """
         new_unit = copy.deepcopy(self.factory_list[unit_id])
-            
-        # Apply comm tower effects
-        new_unit.attack += self.com_towers * 10
-        
         return new_unit
     
     def gain_charge(self, amount: int):
@@ -87,7 +81,7 @@ class CO(ABC):
             return [COPower]
         return []
     
-    def apply_co_power(self, gamestate):
+    def apply_co_power(self, gamestate: GameState):
         """
         Apply all default effects of a power to the gameboard
         """
@@ -100,32 +94,34 @@ class CO(ABC):
         """
         self.co_power_active = False
     
-    def apply_super_power(self, gamestate):
+    def apply_super_power(self, gamestate: GameState):
         """
         Apply all default effects of a super to the gameboard
         """
         self.super_power_active = True
         self.power_meter = 0
         
-    def end_super_power(self, gamestate):
+    def end_super_power(self, gamestate: object):
         """
         Remove all default temporary effects of a super from the gameboard
         """
         self.super_power_active = False
         
-    def add_com_tower(self, gamestate):
+    def add_com_tower(self):
         """
         Apply com tower bonus to all units
         """
+        self.com_towers += 1
         self.co_attack += 10
     
-    def remove_com_tower(self, gamestate):
+    def remove_com_tower(self):
         """
         Remove com tower bonus from all units
         """
+        self.com_towers -= 1
         self.co_attack -= 10
     
-    def attack_calculator(self, a_unit, d_unit, a_terrain):
+    def attack_calculator(self, a_unit: Unit, d_unit: Unit, a_terrain: int) -> tuple[int]:
         """
         Calculate the default attack range during a combat
         """
@@ -150,7 +146,7 @@ class CO(ABC):
         
         return attack_high, attack_low
 
-    def defence_calculator(self, a_unit, d_unit, d_terrain):
+    def defence_calculator(self, a_unit: Unit, d_unit: Unit, d_terrain: int) -> tuple[int]:
         """
         Calculate the default defence during a combat
         """
@@ -160,6 +156,12 @@ class CO(ABC):
         
         defence = unit_defence + TERRAIN_DEFENCE[d_terrain] * d_unit.vhp
         return defence
+    
+    def calculate_income(self) -> int:
+        """
+        Calculate the CO's income this turn
+        """
+        return self.num_income_buildings * self.funds_per_prop
     
 class BlankCO(CO):
     def __init__(self):

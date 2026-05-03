@@ -9,7 +9,7 @@ import logging
 
 from src.gameObjects.actions import Action, Move, EndTurn, Capture
 from src.gameObjects.player import Player
-from src.gameObjects.buildings import Building
+from src.gameObjects.buildings import Building, ComTower, Lab, HQ
 
 from src.gameUtils.damage_calc import calc_damage
 
@@ -167,7 +167,17 @@ class GameState():
         Apply the effects of a capture action
         """
         cap_delta = capture.unit.capture_power * capture.unit.vhp
+        original_owner = self.players[capture.building.owner]
         capped = capture.building.capture(cap_delta, self.current_player_id)
+        if capped:
+            if type(capture.building) not in (ComTower, Lab):
+                original_owner.co.num_income_buildings -= 1
+                self.current_player.co.num_income_buildings += 1
+            if type(capture.building) is ComTower:
+                original_owner.co.remove_com_tower()
+                self.current_player.co.add_com_tower()
+                
+
         # TODO - include effect on player income or other
 
     def evaluate(self, evaluator: object) -> int:
