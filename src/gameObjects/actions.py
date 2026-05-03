@@ -14,6 +14,10 @@ class Action():
     def __init__(self):
         self._id = hex(id(self))
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}"
+
+
 class Move(Action):
     """
     A class for storing unit moves and attacks
@@ -57,7 +61,7 @@ class COPower(Action):
     def __init__(self):
         super().__init__()
         # TODO
-
+    
 
 class SuperPower(Action):
     """

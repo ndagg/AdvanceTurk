@@ -7,39 +7,73 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
-from src.gameObjects.moves import Move, EndTurn
+from gameObjects.actions import Action, Move, EndTurn, Capture
+from src.gameObjects.player import Player
 from src.gameUtils.damage_calc import calc_damage
 
 logger = logging.getLogger("mainlogger.gamestate")
 
 class GameState():
-
+    """
+    A class for carrying the required state for a single moment in a game
+    """
     def __init__(
             self,
-            players: list[object],
+            players: list[Player],
             unit_lists: list[list],
             unit_map: object):
+        # Stateful - needs deepcopy
         self.players = players
+        self.current_player = players[0]
         self.unit_lists = unit_lists
-        self.current_player = players[0].player_number
-        self.unit_map = unit_map
-        self.current_moves = []
+        self.current_actions = []
 
-    def get_moves(self):
+        # No state - direct reference
+        self.current_player_id = players[0].player_number
+        self.unit_map = unit_map
+
+    
+    def get_actions(self) -> list[Action]:
+        """
+        Return the list of available actions for the player
+        """
+        # Regular moves
+        self.current_actions = self.get_moves()
+
+        # Captures
+
+        # CO Powers
+        self.current_actions.extend(
+            self.current_player.co.powers_available())
+        
+        # End turn
+        self.current_actions.append(EndTurn())
+        
+
+    def get_moves(self) -> list[Move]:
         """
         Return the list of available moves for the current player
         """
-        self.current_moves = []
-        friendlies = self.unit_lists[self.current_player]
-        blocking_units = self.unit_lists[1-self.current_player]
+        self.current_actions = []
+        friendlies = self.unit_lists[self.current_player_id]
+        blocking_units = self.unit_lists[1-self.current_player_id]
         self.unit_map.update_move_graphs(blocking_units)
         for unit in friendlies:
             if unit.active:
-                self.current_moves.extend(
+                self.current_actions.extend(
                     self.unit_map.generate_single_unit_moves(
                         unit, blocking_units, friendlies))
-        self.current_moves.append(EndTurn())
-        return self.current_moves
+        
+        return self.current_actions
+    
+    def get_captures(self, moves: list[Move]) -> list[Capture]:
+        """
+        Return a list of available captures for the current player
+        """
+        cap_moves = []
+        for m in moves:
+            if m.unit.id < 2 and m.attack_target is None:
+                if m.destination
 
     def make_move_on_new_state(self, original_move: object, ind: int) -> object:
         """
@@ -118,7 +152,7 @@ class GameState():
         """
         Determine the value of the current player's position
         """
-        value = self.players[self.current_player].evaluate()  # TODO - work out how to handle evaluators
+        value = self.current_player.evaluate()  # TODO - work out how to handle evaluators
         return value
 
     def is_gameover(self):
@@ -138,11 +172,14 @@ class GameState():
         cls = self.__class__
         new = cls.__new__(cls)
         # Direct references
-        new.players = self.players
-        new.current_player = self.current_player
+        new.current_player_id = self.current_player_id
         new.unit_map = self.unit_map
-        # Deep copies - done as single dict so that units in moves and lists match
-        dcs = {k:self.__dict__[k] for k in ("current_moves", "unit_lists")}
+        # Deep copies - done as single dict so that units in actions and lists match
+        dcs = {k:self.__dict__[k] for k in (
+            "current_actions", 
+            "unit_lists", 
+            "players", 
+            "current_player")}
         new.__dict__.update(deepcopy(dcs))
         return new
 

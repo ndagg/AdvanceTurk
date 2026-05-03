@@ -16,7 +16,7 @@ from src.gameUtils.aw_lists import TERRAIN_TYPES
 from src.codeUtils.constants import TILEPX, TILEHF
 from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 
-from src.gameObjects.moves import Move
+from gameObjects.actions import Move
 from src.gameObjects.units import UNITS
 
 
@@ -68,7 +68,7 @@ def plot_moves(gamestate, unit, dims, ax=None, over_img=True):
     if ax is None:
         fig, ax = plt.subplots()
     
-    moves = [move for move in gamestate.current_moves if type(move) is Move and move.unit == unit ]
+    moves = [move for move in gamestate.current_actions if type(move) is Move and move.unit == unit ]
     pos = [gloc_2_loc(move.destination, dims) for move in moves]
     
     if over_img:

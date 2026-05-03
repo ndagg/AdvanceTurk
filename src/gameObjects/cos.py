@@ -14,7 +14,8 @@ from src.gameUtils.aw_lists import (
     SECONDARY_ATTACK,
     TERRAIN_DEFENCE)
 
-from src.gameObjects.units import ARCHETYPES, UNITS
+from src.gameObjects.units import Unit, ARCHETYPES, UNITS
+from gameObjects.actions import Action, SuperPower, COPower
 
 logger = logging.getLogger("mainlogger.cos")
 
@@ -55,7 +56,7 @@ class CO(ABC):
             self.factory_list.append(unit)
             
     
-    def unit_factory(self, unit_id: int) -> object:
+    def unit_factory(self, unit_id: int) -> Unit:
         """
         Create a unit with the default stats
         """
@@ -66,6 +67,24 @@ class CO(ABC):
         
         return new_unit
     
+    def gain_charge(self, amount: int):
+        """
+        Increase the CO power charge when taking damage
+        """
+        if self.power_meter < self.super_power_cost:
+            self.power_meter += amount
+            if self.power_meter > self.super_power_cost:
+                self.power_meter = self.super_power_cost
+
+    def powers_available(self) -> list[Action]:
+        """
+        Return the available CO power actions
+        """
+        if self.power_meter == self.super_power_cost:
+            return [COPower, SuperPower]
+        elif self.power_meter >= self.co_power_cost:
+            return [COPower]
+        return []
     
     def apply_co_power(self, gamestate):
         """

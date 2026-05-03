@@ -12,14 +12,14 @@ from src.gameUtils.aw_lists import (
     TERRAIN_TYPES,
     TERRAIN_COST
     )
-from src.gameObjects.moves import Move
+from gameObjects.actions import Move
 
 
 class BaseMap():
     """
     A class for representing the basic state of the game map
     """
-    def __init__(self, terrain_dict, building_dict):
+    def __init__(self, terrain_dict: dict, building_dict: dict):
         # Get map dimensions
         x_dim = max(
             max(int(i) for i in building_dict.keys()),

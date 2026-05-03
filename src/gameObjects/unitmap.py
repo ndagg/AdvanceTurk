@@ -10,7 +10,8 @@ import logging
 from src.gameUtils.indirect_range import get_indirect_attack_tiles
 from src.gameUtils.aw_lists import ANY_ATTACK
 
-from src.gameObjects.moves import Move
+from gameObjects.gamemap import BaseMap
+from gameObjects.actions import Move
 
 logger = logging.getLogger("mainlogger.unitmap")
 
@@ -28,7 +29,7 @@ class UnitMap():
         The x and y dimensions of the map
     """
 
-    def __init__(self, base_map: object):
+    def __init__(self, base_map: BaseMap):
         self.super_graph = base_map.super_graph
         self.pure_terrain_graphs = base_map.sub_graphs
         self.dims = base_map.dims
