@@ -63,19 +63,20 @@ def main():
 
     gamestate.get_actions()
  
-    ax = plot_map_image(gmap)
-    ax = plot_moves(gamestate, tank, gmap.dims, ax)
-    ax = plot_units_on_map([tank, inf, recon], ax)
+    # ax = plot_map_image(gmap)
+    # ax = plot_moves(gamestate, tank, gmap.dims, ax)
+    # ax = plot_units_on_map([tank, inf, recon], ax)
 
-    # score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
+    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 
-    # print(f"bot complete: {score}, {move}")
+    print(f"bot complete: {score}, {move}")
 
 
 
 if __name__ == "__main__":
     main()
+    print("Main complete")
 
 # %%

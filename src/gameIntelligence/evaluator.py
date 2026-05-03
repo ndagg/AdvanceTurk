@@ -34,10 +34,10 @@ class PureValueEvaluator(Evaluator):
 
     def evaluate(self, gamestate: object) -> int:
         # Negative value is sum of oppositions' units
-        opposing = gamestate.unit_lists[1 - gamestate.current_player]
+        opposing = gamestate.unit_lists[1 - gamestate.current_player_id]
         opposing_value = sum(self.unit_value(u) for u in opposing)
 
-        own = gamestate.unit_lists[gamestate.current_player]
+        own = gamestate.unit_lists[gamestate.current_player_id]
         own_value = sum(self.unit_value(u) for u in own)
 
         return own_value - opposing_value

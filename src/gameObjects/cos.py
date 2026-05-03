@@ -16,14 +16,13 @@ from src.gameUtils.aw_lists import (
 
 from src.gameObjects.units import Unit, ARCHETYPES, UNITS
 from src.gameObjects.actions import Action, SuperPower, COPower
-from src.gameObjects.gamestate import GameState
 
 logger = logging.getLogger("mainlogger.cos")
 
 
 class CO(ABC):
     
-    team = 0
+    player_number = 0
     
     power_meter = 0
     co_power_cost = 0
@@ -41,9 +40,9 @@ class CO(ABC):
     funds = 0
     num_income_buildings = 0
 
-    def __init__(self, team: int):
+    def __init__(self, player_number: int):
         self.unit_factory_init()
-        self.team = team
+        self.player_number = player_number
 
     def unit_factory_init(self):
         """
@@ -51,7 +50,7 @@ class CO(ABC):
         """
         self.factory_list = []
         for unit in UNITS:
-            unit = unit(self.team_number)
+            unit = unit(self.player_number)
             self.factory_list.append(unit)
             
     
@@ -76,12 +75,12 @@ class CO(ABC):
         Return the available CO power actions
         """
         if self.power_meter == self.super_power_cost:
-            return [COPower, SuperPower]
+            return [COPower(), SuperPower()]
         elif self.power_meter >= self.co_power_cost:
-            return [COPower]
+            return [COPower()]
         return []
     
-    def apply_co_power(self, gamestate: GameState):
+    def apply_co_power(self, gamestate: object):
         """
         Apply all default effects of a power to the gameboard
         """
@@ -94,7 +93,7 @@ class CO(ABC):
         """
         self.co_power_active = False
     
-    def apply_super_power(self, gamestate: GameState):
+    def apply_super_power(self, gamestate: object):
         """
         Apply all default effects of a super to the gameboard
         """
@@ -164,6 +163,6 @@ class CO(ABC):
         return self.num_income_buildings * self.funds_per_prop
     
 class BlankCO(CO):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, player_number: int):
+        super().__init__(player_number)
         logger.warning("Using BlankCO!")

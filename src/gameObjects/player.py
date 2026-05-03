@@ -14,6 +14,6 @@ class Player:
         self.player_number = player_number
         self.team = team_number
         if co is None:
-            self.co = BlankCO()
+            self.co = BlankCO(player_number)
         else:
             self.co = co

@@ -45,33 +45,44 @@ class GameState():
         moves = self.get_moves()
 
         # Captures
-        captures =(self.get_captures(moves))
+        captures = self.get_captures(moves)
 
         # CO Powers
         powers = self.current_player.co.powers_available()
 
-        actions = moves + captures + powers
+        # Unit builds
+        builds = []
+
+        actions = moves + captures + powers + builds
+
+        logger.debug(
+            f"{len(actions)} available actions: " +
+            f"{len(moves)} moves, " +
+            f"{len(captures)} captures, " +
+            f"{len(builds)} builds"
+            )
         
         # End turn
         actions.append(EndTurn())
 
         self.current_actions = actions
+        return self.current_actions
         
     def get_moves(self) -> list[Move]:
         """
         Return the list of available moves for the current player
         """
-        self.current_actions = []
+        moves = []
         friendlies = self.unit_lists[self.current_player_id]
         blocking_units = self.unit_lists[1-self.current_player_id]
         self.unit_map.update_move_graphs(blocking_units)
         for unit in friendlies:
             if unit.active:
-                self.current_actions.extend(
+                moves.extend(
                     self.unit_map.generate_single_unit_moves(
                         unit, blocking_units, friendlies))
         
-        return self.current_actions
+        return moves
     
     def get_captures(self, moves: list[Move]) -> list[Capture]:
         """
@@ -84,6 +95,7 @@ class GameState():
                 if dest in self.buildings_dict.keys():
                     if self.buildings_dict[dest].owner != self.current_player_id:
                         cap_actions.append(Capture(m, self.buildings_dict[dest]))
+        return cap_actions
 
     def make_action_on_new_state(self, original_action: object, ind: int) -> object:
         """
@@ -103,10 +115,11 @@ class GameState():
                 new_gamestate.move_unit(action)
         
         elif type(action) is Capture:
-            new_gamestate
+            new_gamestate.make_capture(action)
 
         elif type(action) is EndTurn:
-            new_gamestate.current_player = 1 - new_gamestate.current_player
+            new_gamestate.current_player_id = 1 - new_gamestate.current_player_id
+            new_gamestate.curren_player = new_gamestate.players[new_gamestate.current_player_id]
         return new_gamestate
     
     def move_unit(self, move: object):
@@ -170,15 +183,20 @@ class GameState():
         original_owner = self.players[capture.building.owner]
         capped = capture.building.capture(cap_delta, self.current_player_id)
         if capped:
+            logger.debug(
+                f"Capture of {capture.building} from {capture.building.owner} by {capture.unit.owner}"
+                )
             if type(capture.building) not in (ComTower, Lab):
                 original_owner.co.num_income_buildings -= 1
                 self.current_player.co.num_income_buildings += 1
+                if type(capture.building) is HQ:
+                    # This attribute will only exist in this circumstance
+                    self.hq_cap = capture.building.owner
             if type(capture.building) is ComTower:
                 original_owner.co.remove_com_tower()
                 self.current_player.co.add_com_tower()
                 
-
-        # TODO - include effect on player income or other
+        # TODO - track in-progress captures, account for lab captures
 
     def evaluate(self, evaluator: object) -> int:
         """
@@ -192,9 +210,15 @@ class GameState():
         Check to see whether the game is over based on the gamestate
         """
         gameover = False
-        for p in self.unit_lists:
-            if not p:  # TODO - include check for HQ/lab capture
+        for i, p in enumerate(self.unit_lists):
+            if not p:
                 gameover = True
+                logger.info(f"Gameover, player {i} has no units")
+        cap = getattr(self, "hq_cap", False)
+        if cap:
+            gameover = True
+            logger.info(f"Gameover, player {cap} has lost their HQ")
+
         return gameover
     
     def make_new_state(self) -> object:
@@ -210,7 +234,7 @@ class GameState():
         dcs = {k:self.__dict__[k] for k in (
             "current_actions", 
             "unit_lists",
-            "buildings_list",
+            "buildings_dict",
             "players", 
             "current_player")}
         new.__dict__.update(deepcopy(dcs))
