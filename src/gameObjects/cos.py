@@ -15,7 +15,7 @@ from src.gameUtils.aw_lists import (
     TERRAIN_DEFENCE)
 
 from src.gameObjects.units import Unit, ARCHETYPES, UNITS
-from gameObjects.actions import Action, SuperPower, COPower
+from src.gameObjects.actions import Action, SuperPower, COPower
 
 logger = logging.getLogger("mainlogger.cos")
 

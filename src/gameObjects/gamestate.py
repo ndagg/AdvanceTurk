@@ -7,7 +7,7 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
-from gameObjects.actions import Action, Move, EndTurn, Capture
+from src.gameObjects.actions import Action, Move, EndTurn, Capture
 from src.gameObjects.player import Player
 from src.gameUtils.damage_calc import calc_damage
 
@@ -73,7 +73,8 @@ class GameState():
         cap_moves = []
         for m in moves:
             if m.unit.id < 2 and m.attack_target is None:
-                if m.destination
+                if m.destination:
+                    pass
 
     def make_move_on_new_state(self, original_move: object, ind: int) -> object:
         """

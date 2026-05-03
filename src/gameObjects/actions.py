@@ -4,7 +4,6 @@ Created on Sat Nov  8 15:52:24 2025
 
 @author: ndagg
 """
-from src.gameObjects.units import Infantry, Mech
 
 class Action():
     """
@@ -45,7 +44,7 @@ class EndTurn(Action):
         return "End turn"
 
 
-class Cature(Action):
+class Capture(Action):
     """
     A class for representing infantry captures
     """

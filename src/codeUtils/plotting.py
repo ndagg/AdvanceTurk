@@ -16,7 +16,7 @@ from src.gameUtils.aw_lists import TERRAIN_TYPES
 from src.codeUtils.constants import TILEPX, TILEHF
 from src.codeUtils.helpers import gloc_2_loc, loc_2_gloc
 
-from gameObjects.actions import Move
+from src.gameObjects.actions import Move
 from src.gameObjects.units import UNITS
 
 

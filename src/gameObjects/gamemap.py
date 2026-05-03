@@ -12,7 +12,16 @@ from src.gameUtils.aw_lists import (
     TERRAIN_TYPES,
     TERRAIN_COST
     )
-from gameObjects.actions import Move
+
+from src.gameObjects.buildings import (
+    Base, 
+    Airport, 
+    Port, 
+    City, 
+    HQ, 
+    ComTower, 
+    Lab
+    )
 
 
 class BaseMap():
@@ -34,9 +43,13 @@ class BaseMap():
         self.populate_terrain_array(terrain_dict, building_dict)
                     
         # Generate movement type subgraphs
-        self.generate_move_type_graphs()
+        self.super_graph, self.sub_graphs= self.generate_move_type_graphs()
+
+        # Generate buildings list
+        self.buildings_list = self.generate_buildings_list()
         
-    def populate_terrain_array(self, terrain_dict, building_dict):
+
+    def populate_terrain_array(self, terrain_dict: dict, building_dict: dict):
         """
         Construct an array containing terrain types from the  dictionaries
         """
@@ -83,16 +96,16 @@ class BaseMap():
                         string = column[y]["terrain_name"]
                 self.terrain_arr[x, y] = self.match_terrain_name(string)
 
-    def match_terrain_name(self, name):
+    def match_terrain_name(self, name: str) -> int:
         for i, string in enumerate(TERRAIN_TYPES):
             if string in name:
                 return i 
             
-    def generate_move_type_graphs(self):
+    def generate_move_type_graphs(self) -> tuple[nx.DiGraph, list[nx.DiGraph]]:
         """
         Generate a set of graphs for calculating possible moves
         """
-        def generate_sub_graph(super_graph, move_type):
+        def generate_sub_graph(super_graph: nx.DiGraph, move_type: int) -> nx.DiGraph:
             """
             Generate a sub graph for a particular movement type
             """
@@ -127,13 +140,18 @@ class BaseMap():
                 n += 1
         
         # Get sub graphs for each movement type
-        self.sub_graphs = []
+        sub_graphs = []
         for i in range(len(TERRAIN_COST)):
-            self.sub_graphs.append(generate_sub_graph(super_graph, i))
+            sub_graphs.append(generate_sub_graph(super_graph, i))
         
-        self.super_graph = super_graph
+        return super_graph, sub_graphs
                 
-          
-
-            
+    def generate_buildings_list(self) -> list[tuple[int]]:
+        buildings_list = []
+        b_inds = {11: City, 12: Base, 13: Airport, 14: Port, 15: HQ, 16: ComTower, 17: Lab}
+        # Iterate over 'wheels' movement type as it is a short list which contains all buildings
+        for gloc, tile in self.sub_graphs[2]._node.items():
+            if tile["terrain"] in b_inds.keys():
+                buildings_list.append(b_inds[tile["terrain"]](gloc))
+        return buildings_list
             

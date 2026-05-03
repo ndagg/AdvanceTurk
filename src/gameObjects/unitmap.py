@@ -10,8 +10,8 @@ import logging
 from src.gameUtils.indirect_range import get_indirect_attack_tiles
 from src.gameUtils.aw_lists import ANY_ATTACK
 
-from gameObjects.gamemap import BaseMap
-from gameObjects.actions import Move
+from src.gameObjects.gamemap import BaseMap
+from src.gameObjects.actions import Move
 
 logger = logging.getLogger("mainlogger.unitmap")
 
