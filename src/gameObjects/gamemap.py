@@ -8,6 +8,8 @@ Created on Fri May 23 19:48:00 2025
 import numpy as np
 import networkx as nx
 
+from src.codeUtils.helpers import gloc_2_loc
+
 from src.gameUtils.aw_lists import (
     TERRAIN_TYPES,
     TERRAIN_COST
@@ -29,25 +31,29 @@ class BaseMap():
     """
     A class for representing the basic state of the game map
     """
-    def __init__(self, terrain_dict: dict, building_dict: dict):
+    def __init__(
+            self, 
+            awbw_terrain_dict: dict, 
+            awbw_building_dict: dict
+            ):
         # Get map dimensions
         x_dim = max(
-            max(int(i) for i in building_dict.keys()),
-            max(int(i) for i in terrain_dict.keys())) + 1
+            max(int(i) for i in awbw_building_dict.keys()),
+            max(int(i) for i in awbw_terrain_dict.keys())) + 1
         y_dim = max(
-            max(int(i) for i in building_dict['0'].keys()),
-            max(int(i) for i in terrain_dict['0'].keys())) + 1
+            max(int(i) for i in awbw_building_dict['0'].keys()),
+            max(int(i) for i in awbw_terrain_dict['0'].keys())) + 1
         
         self.dims = [x_dim, y_dim]
         self.terrain_arr = np.zeros(self.dims, dtype=int)
         
-        self.populate_terrain_array(terrain_dict, building_dict)
+        self.populate_terrain_array(awbw_terrain_dict, awbw_building_dict)
                     
         # Generate movement type subgraphs
         self.super_graph, self.sub_graphs= self.generate_move_type_graphs()
 
         # Generate buildings list
-        self.buildings_dict = self.generate_buildings_dict()
+        # self.buildings_dict = self.generate_buildings_dict(awbw_building_dict)
         
 
     def populate_terrain_array(self, terrain_dict: dict, building_dict: dict):
@@ -147,12 +153,15 @@ class BaseMap():
         
         return super_graph, sub_graphs
                 
-    def generate_buildings_dict(self) -> dict[int: Building]:
+    def generate_buildings_dict(self, awbw_building_dict: dict) -> dict[int: Building]:
         buildings_dict = {}
         b_inds = {11: City, 12: Base, 13: Airport, 14: Port, 15: HQ, 16: ComTower, 17: Lab}
         # Iterate over 'wheels' movement type as it is a short list which contains all buildings
         for gloc, tile in self.sub_graphs[2]._node.items():
             if tile["terrain"] in b_inds.keys():
+                x, y = gloc_2_loc(gloc, self.dims)
                 buildings_dict[gloc] = b_inds[tile["terrain"]](gloc)
+                owner = awbw_building_dict[str(x)][str(y)]["countries_id"]  # TODO - probably not the best way of determining player ids
+                
         return buildings_dict
             

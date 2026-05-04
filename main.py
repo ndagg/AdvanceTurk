@@ -40,6 +40,7 @@ def main():
     reader.html = html
     reader.prettied = html.prettify()
     gmap = reader.generate_basemap()
+    player1, player2 = reader.generate_players()
 
 
     tank = Tank(0)
@@ -55,23 +56,21 @@ def main():
     inf.fuel = 1
     recon.fuel = 4
 
-    player1 = Player(0)
-    player2 = Player(1)
     umap = UnitMap(gmap)
     buildings_dict = gmap.buildings_dict
     gamestate = GameState([player1, player2], unit_lists, buildings_dict, umap)
 
     gamestate.get_actions()
  
-    # ax = plot_map_image(gmap)
-    # ax = plot_moves(gamestate, tank, gmap.dims, ax)
-    # ax = plot_units_on_map([tank, inf, recon], ax)
+    ax = plot_map_image(gmap)
+    ax = plot_moves(gamestate, tank, gmap.dims, ax)
+    ax = plot_units_on_map([tank, inf, recon], ax)
 
-    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
+    # score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 
-    print(f"bot complete: {score}, {move}")
+    # print(f"bot complete: {score}, {move}")
 
 
 

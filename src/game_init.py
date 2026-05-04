@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 import json
 
 from src.gameObjects.gamemap import BaseMap
+from src.gameObjects.player import Player
+from src.gameObjects.cos import BlankCO
 
 class GameReader:
     """
@@ -58,6 +60,25 @@ class GameReader:
         building_info_text = self.prettied[start+16:].partition(";")[0]
         building_dict = json.loads(building_info_text)
         self.building_dict = building_dict
+
+    def get_unit_dict(self):
+        """
+        Extract the unit dictionary from the game page HTML
+        """
+        start = self.prettied.index("unitsInfo")
+        units_info_text = self.prettied[start+12:].partition(";")[0]
+        unit_dict = json.loads(units_info_text)
+        self.unit_dict = unit_dict
+
+    def get_player_dict(self):
+        """
+        Extract the player info from the game page HTML
+        """
+        start = self.prettied.index("playersInfo")
+        player_info_text = self.prettied[start+14:].partition(";")[0]
+        player_dict = json.loads(player_info_text)
+
+        self.player_dict = player_dict
     
     def generate_basemap(self):
         """
@@ -68,9 +89,23 @@ class GameReader:
         basemap = BaseMap(self.terrain_dict, self.building_dict)
         return basemap
     
-    def create_players(self):
+    def generate_players(self) -> list[Player]:
         """
+        Generate the Player and CO objects for the currently stored game
         """
+        self.get_player_dict()
+
+        players = []
+        max_id = max(list(self.player_dict.keys()))
+        
+        for p in self.player_dict.values():
+            # TODO - include CO list
+            id = int(p["players_id"]) - max_id
+            co = BlankCO(id)
+            co.power_meter = p["players_co_power"]
+            players.append(Player(id, None, co))
+        
+        return players
 
 
 
