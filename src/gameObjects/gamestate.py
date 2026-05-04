@@ -7,58 +7,119 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
-from src.gameObjects.moves import Move, EndTurn
+from src.gameObjects.actions import Action, Move, EndTurn, Capture
+from src.gameObjects.player import Player
+from src.gameObjects.buildings import Building, ComTower, Lab, HQ
+
 from src.gameUtils.damage_calc import calc_damage
 
 logger = logging.getLogger("mainlogger.gamestate")
 
 class GameState():
-
+    """
+    A class for carrying the required state for a single moment in a game
+    """
     def __init__(
             self,
-            players: list[object],
+            players: list[Player],
             unit_lists: list[list],
+            buildings_dict: dict[int: Building],
             unit_map: object):
+        # Stateful - needs deepcopy
         self.players = players
+        self.current_player = players[0]
+        self.buildings_dict = buildings_dict
         self.unit_lists = unit_lists
-        self.current_player = players[0].player_number
-        self.unit_map = unit_map
-        self.current_moves = []
+        self.current_actions = []
 
-    def get_moves(self):
+        # No state - direct reference
+        self.current_player_id = players[0].player_number
+        self.unit_map = unit_map
+
+    
+    def get_actions(self) -> list[Action]:
+        """
+        Return the list of available actions for the player
+        """
+        # Regular moves
+        moves = self.get_moves()
+
+        # Captures
+        captures = self.get_captures(moves)
+
+        # CO Powers
+        powers = self.current_player.co.powers_available()
+
+        # Unit builds
+        builds = []
+
+        actions = moves + captures + powers + builds
+
+        logger.debug(
+            f"{len(actions)} available actions: " +
+            f"{len(moves)} moves, " +
+            f"{len(captures)} captures, " +
+            f"{len(builds)} builds"
+            )
+        
+        # End turn
+        actions.append(EndTurn())
+
+        self.current_actions = actions
+        return self.current_actions
+        
+    def get_moves(self) -> list[Move]:
         """
         Return the list of available moves for the current player
         """
-        self.current_moves = []
-        friendlies = self.unit_lists[self.current_player]
-        blocking_units = self.unit_lists[1-self.current_player]
+        moves = []
+        friendlies = self.unit_lists[self.current_player_id]
+        blocking_units = self.unit_lists[1-self.current_player_id]
         self.unit_map.update_move_graphs(blocking_units)
         for unit in friendlies:
             if unit.active:
-                self.current_moves.extend(
+                moves.extend(
                     self.unit_map.generate_single_unit_moves(
                         unit, blocking_units, friendlies))
-        self.current_moves.append(EndTurn())
-        return self.current_moves
+        
+        return moves
+    
+    def get_captures(self, moves: list[Move]) -> list[Capture]:
+        """
+        Return a list of available captures for the current player
+        """
+        cap_actions = []
+        for m in moves:
+            dest = m.destination
+            if m.unit.id < 2 and m.attack_target is None:
+                if dest in self.buildings_dict.keys():
+                    if self.buildings_dict[dest].owner != self.current_player_id:
+                        cap_actions.append(Capture(m, self.buildings_dict[dest]))
+        return cap_actions
 
-    def make_move_on_new_state(self, original_move: object, ind: int) -> object:
+    def make_action_on_new_state(self, original_action: object, ind: int) -> object:
         """
         Create a new gamestate and apply the effects of a Move to it
         """
-        logger.debug(f"Making move: {original_move} - {original_move._id}")
+        logger.debug(f"Making move: {original_action} - {original_action._id}")
         new_gamestate = self.make_new_state()
-        move = new_gamestate.current_moves[ind]
+        action = new_gamestate.current_actions[ind]
 
-        if type(move) is EndTurn:
-            new_gamestate.current_player = 1 - new_gamestate.current_player
-            return new_gamestate
+        
+        if type(action) is Move:
+            if action.attack_target is not None:
+                a_survive, d_survive = new_gamestate.make_attack(action)
+                if a_survive:
+                    new_gamestate.move_unit(action)
+            else:
+                new_gamestate.move_unit(action)
+        
+        elif type(action) is Capture:
+            new_gamestate.make_capture(action)
 
-        if move.attack_target is not None:
-            a_survive, d_survive = new_gamestate.make_attack(move)
-            if a_survive:
-                new_gamestate.move_unit(move)
-        else:
-            new_gamestate.move_unit(move)
+        elif type(action) is EndTurn:
+            new_gamestate.current_player_id = 1 - new_gamestate.current_player_id
+            new_gamestate.curren_player = new_gamestate.players[new_gamestate.current_player_id]
         return new_gamestate
     
     def move_unit(self, move: object):
@@ -114,11 +175,34 @@ class GameState():
         
         return a_survive, d_survive
 
+    def make_capture(self, capture: Capture):
+        """
+        Apply the effects of a capture action
+        """
+        cap_delta = capture.unit.capture_power * capture.unit.vhp
+        original_owner = self.players[capture.building.owner]
+        capped = capture.building.capture(cap_delta, self.current_player_id)
+        if capped:
+            logger.debug(
+                f"Capture of {capture.building} from {capture.building.owner} by {capture.unit.owner}"
+                )
+            if type(capture.building) not in (ComTower, Lab):
+                original_owner.co.num_income_buildings -= 1
+                self.current_player.co.num_income_buildings += 1
+                if type(capture.building) is HQ:
+                    # This attribute will only exist in this circumstance
+                    self.hq_cap = capture.building.owner
+            if type(capture.building) is ComTower:
+                original_owner.co.remove_com_tower()
+                self.current_player.co.add_com_tower()
+                
+        # TODO - track in-progress captures, account for lab captures
+
     def evaluate(self, evaluator: object) -> int:
         """
         Determine the value of the current player's position
         """
-        value = self.players[self.current_player].evaluate()  # TODO - work out how to handle evaluators
+        value = self.current_player.evaluate()  # TODO - work out how to handle evaluators
         return value
 
     def is_gameover(self):
@@ -126,9 +210,15 @@ class GameState():
         Check to see whether the game is over based on the gamestate
         """
         gameover = False
-        for p in self.unit_lists:
-            if not p:  # TODO - include check for HQ/lab capture
+        for i, p in enumerate(self.unit_lists):
+            if not p:
                 gameover = True
+                logger.info(f"Gameover, player {i} has no units")
+        cap = getattr(self, "hq_cap", False)
+        if cap:
+            gameover = True
+            logger.info(f"Gameover, player {cap} has lost their HQ")
+
         return gameover
     
     def make_new_state(self) -> object:
@@ -138,11 +228,15 @@ class GameState():
         cls = self.__class__
         new = cls.__new__(cls)
         # Direct references
-        new.players = self.players
-        new.current_player = self.current_player
+        new.current_player_id = self.current_player_id
         new.unit_map = self.unit_map
-        # Deep copies - done as single dict so that units in moves and lists match
-        dcs = {k:self.__dict__[k] for k in ("current_moves", "unit_lists")}
+        # Deep copies - done as single dict so that units in actions and lists match
+        dcs = {k:self.__dict__[k] for k in (
+            "current_actions", 
+            "unit_lists",
+            "buildings_dict",
+            "players", 
+            "current_player")}
         new.__dict__.update(deepcopy(dcs))
         return new
 

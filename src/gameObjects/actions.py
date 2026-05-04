@@ -4,7 +4,9 @@ Created on Sat Nov  8 15:52:24 2025
 
 @author: ndagg
 """
-from src.gameObjects.units import Infantry, Mech
+
+from src.gameObjects.buildings import Building
+from src.gameObjects.units import Unit
 
 class Action():
     """
@@ -13,6 +15,10 @@ class Action():
     """
     def __init__(self):
         self._id = hex(id(self))
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}"
+
 
 class Move(Action):
     """
@@ -41,14 +47,15 @@ class EndTurn(Action):
         return "End turn"
 
 
-class Cature(Action):
+class Capture(Action):
     """
     A class for representing infantry captures
     """
-    def __init__(self, unit: object):
+    def __init__(self, move: Move, building: Building):
         super().__init__()
-        # TODO - Gamestate will have to track captures
-
+        self.unit = move.unit
+        self.fuel_cost = move.fuel_cost
+        self.building = building
 
 class COPower(Action):
     """
@@ -57,7 +64,7 @@ class COPower(Action):
     def __init__(self):
         super().__init__()
         # TODO
-
+    
 
 class SuperPower(Action):
     """
