@@ -162,6 +162,7 @@ class BaseMap():
                 x, y = gloc_2_loc(gloc, self.dims)
                 buildings_dict[gloc] = b_inds[tile["terrain"]](gloc)
                 owner = awbw_building_dict[str(x)][str(y)]["countries_id"]  # TODO - probably not the best way of determining player ids
+                # TODO - track captures in building objects
                 
         return buildings_dict
             

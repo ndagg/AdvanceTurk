@@ -89,6 +89,7 @@ class GameReader:
         self.get_terrain_dict()
         self.get_building_dict()
         basemap = BaseMap(self.terrain_dict, self.building_dict)
+        self.dims = basemap.dims
         return basemap
     
     def generate_players(self) -> list[Player]:
@@ -125,10 +126,10 @@ class GameReader:
             unit.hidden = v["units_sub_dive"] != "N"
             if unit.id not in [0, 2]:  # Inf and Recon has infinite ammo
                 unit.ammo = v["units_ammo"]
-            unit.set_loc((v["units_X"], v["units_y"]))
+            unit.set_loc((v["units_x"], v["units_y"]), self.dims)
             unit.vhp = v["units_hit_points"]
             if unit.vhp < 10:
-                unit.hp = unit.vhp * 10 + 5  # Assumes unit is at mid-point of hp bracket
+                unit.hp = unit.vhp * 10 - 5  # Assumes unit is at mid-point of hp bracket
             unit.active = bool(v["units_moved"])
             # TODO - include transports
 
