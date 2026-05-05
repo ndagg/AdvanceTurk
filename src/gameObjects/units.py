@@ -622,3 +622,29 @@ UNITS = [
     Sub,        #21
     Battleship, #22
     Carrier]    #23
+
+UNIT_NAMES = [
+    "Infantry",   #0 /
+    "Mech",       #1 /
+    "Recon",      #2 /
+    "APC",        #3 /
+    "Artillery",  #4 /
+    "Tank",       #5 /
+    "Anti-Air",   #6 /
+    "Missile",    #7 /
+    "Rocket",     #8 /
+    "Md.Tank",    #9 /
+    "Piperunner", #10 /
+    "Neotank",    #11 /
+    "Mega Tank",  #12 /
+    "T-Copter",   #13 /
+    "B-Copter",   #14 /
+    "Fighter",    #15 /
+    "Bomber",     #16 /
+    "Stealth",    #17 /
+    "Black Boat", #18 /
+    "Lander",     #19 /
+    "Cruiser",    #20 /
+    "Sub",        #21 /
+    "Battleship", #22 /
+    "Carrier"]    #23 /

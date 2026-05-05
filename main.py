@@ -41,6 +41,7 @@ def main():
     reader.prettied = html.prettify()
     gmap = reader.generate_basemap()
     player1, player2 = reader.generate_players()
+    unit_lists = reader.generate_unit_lists()
 
 
     tank = Tank(0)
