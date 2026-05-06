@@ -62,11 +62,11 @@ def main():
 
     gamestate.get_actions()
  
-    ax = plot_map_image(gmap)
+    # ax = plot_map_image(gmap)
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
-    ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
+    # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
 
-    # score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
+    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 
