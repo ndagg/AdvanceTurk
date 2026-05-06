@@ -8,24 +8,12 @@ Created on Fri May 23 19:48:00 2025
 import numpy as np
 import networkx as nx
 
-from src.codeUtils.helpers import gloc_2_loc
-
 from src.gameUtils.aw_lists import (
     TERRAIN_TYPES,
     TERRAIN_COST
     )
 
-from src.gameObjects.buildings import (
-    Building,
-    Base, 
-    Airport, 
-    Port, 
-    City, 
-    HQ, 
-    ComTower, 
-    Lab
-    )
-
+from src.codeUtils.helpers import match_terrain_name
 
 class BaseMap():
     """
@@ -78,7 +66,7 @@ class BaseMap():
                         continue
                 else:
                     string = column[y]["terrain_name"]
-                self.terrain_arr[x, y] = self.match_terrain_name(string)
+                self.terrain_arr[x, y] = match_terrain_name(string, TERRAIN_TYPES)
         
         # Traverse building dict
         for x in range(self.dims[0]):
@@ -101,12 +89,8 @@ class BaseMap():
                         continue
                     else:
                         string = column[y]["terrain_name"]
-                self.terrain_arr[x, y] = self.match_terrain_name(string)
+                self.terrain_arr[x, y] = match_terrain_name(string, TERRAIN_TYPES)
 
-    def match_terrain_name(self, name: str) -> int:
-        for i, string in enumerate(TERRAIN_TYPES):
-            if string in name:
-                return i 
             
     def generate_move_type_graphs(self) -> tuple[nx.DiGraph, list[nx.DiGraph]]:
         """
@@ -153,16 +137,3 @@ class BaseMap():
         
         return super_graph, sub_graphs
                 
-    def generate_buildings_dict(self, awbw_building_dict: dict) -> dict[int: Building]:
-        buildings_dict = {}
-        b_inds = {11: City, 12: Base, 13: Airport, 14: Port, 15: HQ, 16: ComTower, 17: Lab}
-        # Iterate over 'wheels' movement type as it is a short list which contains all buildings
-        for gloc, tile in self.sub_graphs[2]._node.items():
-            if tile["terrain"] in b_inds.keys():
-                x, y = gloc_2_loc(gloc, self.dims)
-                buildings_dict[gloc] = b_inds[tile["terrain"]](gloc)
-                owner = awbw_building_dict[str(x)][str(y)]["countries_id"]  # TODO - probably not the best way of determining player ids
-                # TODO - track captures in building objects
-                
-        return buildings_dict
-            
