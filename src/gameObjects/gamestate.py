@@ -90,8 +90,8 @@ class GameState():
         """
         cap_actions = []
         for m in moves:
-            dest = m.destination
             if m.unit.id < 2 and m.attack_target is None:
+                dest = m.destination
                 if dest in self.buildings_dict.keys():
                     if self.buildings_dict[dest].owner != self.current_player_id:
                         cap_actions.append(Capture(m, self.buildings_dict[dest]))

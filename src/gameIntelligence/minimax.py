@@ -6,16 +6,23 @@ Created on Wed Apr 08 20:17:07 2026
 """
 import logging
 
+from src.gameObjects.gamestate import GameState
+from src.gameObjects.player import Player
+from src.gameIntelligence.evaluator import Evaluator
+
+
 logger = logging.getLogger("mainlogger.minimax")
 
-def minimax(gamestate: object,
-            player: object,
+
+def minimax(gamestate: GameState,
+            player: Player,
             max_depth: int,
             current_depth: int,
-            evaluator: object
+            evaluator: Evaluator
             ):
     
     logger.parent.handlers[0].formatter.indent = current_depth
+    logger.parent.handlers[0].formatter.current_player = gamestate.current_player_id
     logger.info(f"Entering minimax at depth {current_depth}")
     
     # Check if recursion has to end

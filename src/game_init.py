@@ -146,7 +146,7 @@ class GameReader:
             unit.vhp = v["units_hit_points"]
             if unit.vhp < 10:
                 unit.hp = unit.vhp * 10 - 5  # Assumes unit is at mid-point of hp bracket
-            unit.active = bool(v["units_moved"])
+            unit.active = not bool(v["units_moved"])
             owner = int(v["units_players_id"]) - self.min_id
             unit.owner = owner
             # TODO - include transports

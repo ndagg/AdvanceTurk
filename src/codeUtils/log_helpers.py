@@ -10,15 +10,17 @@ class MyFormatter(logging.Formatter):
     def __init__(self, fmt):
         logging.Formatter.__init__(self, fmt)
         self.indent = 0
+        self.current_player = 0
 
     def format(self, record):
         indent = self.indent * "     "
+        current_player = str(self.current_player)
         msg = logging.Formatter.format(self, record)
 
         msg = msg.replace("mainlogger.", "")
         preamble, msg = msg.split("#")
         preamble = preamble + " " * (20 - len(preamble))
-        msg = preamble + indent + "-" + msg
+        msg = preamble + indent + "#" + current_player + msg
 
         return msg
     
