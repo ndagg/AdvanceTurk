@@ -40,38 +40,37 @@ def main():
     reader.html = html
     reader.prettied = html.prettify()
     gmap = reader.generate_basemap()
+    player1, player2 = reader.generate_players()
+    unit_lists = reader.generate_unit_lists()
+    building_dict = reader.generate_building_dict()
 
-
-    tank = Tank(0)
-    inf = Infantry(0)
-    recon = Recon(1)
+    # tank = Tank(0)
+    # inf = Infantry(0)
+    # recon = Recon(1)
     # arty = Artillery(0)
-    inf.set_loc((8, 12), gmap.dims)
-    tank.set_loc((7, 13), gmap.dims)
-    recon.set_loc((8, 13), gmap.dims)
+    # inf.set_loc((8, 12), gmap.dims)
+    # tank.set_loc((7, 13), gmap.dims)
+    # recon.set_loc((8, 13), gmap.dims)
     # arty.set_loc((8, 12), gmap.dims)
-    unit_lists =  [[tank, inf], [recon]]
-    tank.fuel = 1
-    inf.fuel = 1
-    recon.fuel = 4
+    # unit_lists =  [[tank, inf], [recon]]
+    # tank.fuel = 1
+    # inf.fuel = 1
+    # recon.fuel = 4
 
-    player1 = Player(0)
-    player2 = Player(1)
     umap = UnitMap(gmap)
-    buildings_dict = gmap.buildings_dict
-    gamestate = GameState([player1, player2], unit_lists, buildings_dict, umap)
+    gamestate = GameState([player1, player2], unit_lists, building_dict, umap)
 
     gamestate.get_actions()
  
     # ax = plot_map_image(gmap)
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
-    # ax = plot_units_on_map([tank, inf, recon], ax)
+    # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
 
     score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
 
 
 
-    print(f"bot complete: {score}, {move}")
+    # print(f"bot complete: {score}, {move}")
 
 
 
