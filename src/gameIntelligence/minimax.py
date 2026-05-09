@@ -26,12 +26,16 @@ def minimax(gamestate: GameState,
     logger.info(f"Entering minimax at depth {current_depth}")
     
     # Check if recursion has to end
-    if gamestate.is_gameover() or current_depth == max_depth:
+    if current_depth == max_depth:
+        logger.info("Exiting minimax due to max depth")
+        return evaluator.evaluate(gamestate), None
+    if gamestate.is_gameover():
+        logger.info("Exiting minimax due to gameover")
         return evaluator.evaluate(gamestate), None
     
     # Otherwise bubble up
     best_action = None
-    if gamestate.current_player == player.player_number:
+    if gamestate.current_player_id == player.player_number:
         best_score = -1e10
     else:
         best_score = 1e10
@@ -39,6 +43,7 @@ def minimax(gamestate: GameState,
     # Go through actions
     actions = gamestate.get_actions()
     if not actions:
+        logger.info("Exiting minimax due to no further actions")
         return evaluator.evaluate(gamestate), best_action
     for i, move in enumerate(actions):
         new_gamestate = gamestate.make_action_on_new_state(move, i)
@@ -52,18 +57,22 @@ def minimax(gamestate: GameState,
             evaluator)
         
         logger.parent.handlers[0].formatter.indent = current_depth
-        logger.info(f"Exiting minimax, score: {current_score}, depth: {current_depth}")
         
         # Update best score
-        if gamestate.current_player == player.player_number:
+        if gamestate.current_player_id == player.player_number:
             if current_score > best_score:
                 logger.info(f"New best score: {current_score}, previous score: {best_score}")
                 best_score = current_score
                 best_action = move
-        else:
-            if current_score <= best_score:
+            else:
                 logger.debug(f"No improvement, current score: {best_score}, discarded score: {current_score}")
+        else:
+            if current_score < best_score:
+                logger.debug(f"New best score: {current_score}, previous score: {best_score}")
                 best_score = current_score
                 best_action = move
+            else:
+                logger.debug(f"No improvement, current score: {best_score}, discarded score: {current_score}")
     
+    logger.info(f"Exiting minimax, score: {current_score}, depth: {current_depth}")
     return best_score, best_action

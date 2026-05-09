@@ -1,6 +1,5 @@
 #%%
 
-import logging
 from bs4 import BeautifulSoup
 
 from src.game_init import GameReader
@@ -44,6 +43,10 @@ def main():
     unit_lists = reader.generate_unit_lists()
     building_dict = reader.generate_building_dict()
 
+    for l in unit_lists:
+        for u in l:
+            u.fuel = 0
+
     # tank = Tank(0)
     # inf = Infantry(0)
     # recon = Recon(1)
@@ -60,7 +63,7 @@ def main():
     umap = UnitMap(gmap)
     gamestate = GameState([player1, player2], unit_lists, building_dict, umap)
 
-    gamestate.get_actions()
+    # gamestate.get_actions()
  
     # ax = plot_map_image(gmap, building_dict)
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
@@ -70,7 +73,7 @@ def main():
 
 
 
-    # print(f"bot complete: {score}, {move}")
+    print(f"bot complete: {score}, {move}")
 
 
 

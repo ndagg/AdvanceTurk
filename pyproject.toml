@@ -10,5 +10,6 @@ dependencies = [
     "networkx>=3.4.2",
     "numpy>=2.2.6",
     "pandas>=2.3.3",
+    "scalene>=2.2.1",
     "selenium>=4.41.0",
 ]

@@ -180,20 +180,22 @@ class GameState():
         Apply the effects of a capture action
         """
         cap_delta = capture.unit.capture_power * capture.unit.vhp
-        original_owner = self.players[capture.building.owner]
+        original_owner = capture.building.owner
         capped = capture.building.capture(cap_delta, self.current_player_id)
         if capped:
             logger.debug(
                 f"Capture of {capture.building} from {capture.building.owner} by {capture.unit.owner}"
                 )
             if type(capture.building) not in (ComTower, Lab):
-                original_owner.co.num_income_buildings -= 1
+                if original_owner is not None:
+                    self.players[original_owner].co.num_income_buildings -= 1
                 self.current_player.co.num_income_buildings += 1
                 if type(capture.building) is HQ:
                     # This attribute will only exist in this circumstance
                     self.hq_cap = capture.building.owner
-            if type(capture.building) is ComTower:
-                original_owner.co.remove_com_tower()
+            elif type(capture.building) is ComTower:
+                if original_owner is not None:
+                    self.players[original_owner].co.remove_com_tower()
                 self.current_player.co.add_com_tower()
                 
         # TODO - track in-progress captures, account for lab captures

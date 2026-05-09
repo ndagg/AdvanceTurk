@@ -126,6 +126,8 @@ class GameReader:
             co = BlankCO(id)
             co.power_meter = p["players_co_power"]
             players.append(Player(id, None, co))
+
+        players.sort(key=lambda x: x.player_number)
         return players
 
     def generate_unit_lists(self) -> list[Unit]:

@@ -29,12 +29,14 @@ class MyFormatter(logging.Formatter):
 with open("main_log.txt", "w") as file:
     file.write("")
 
+level = logging.WARNING
+
 logger = logging.getLogger("mainlogger")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(level)
 
 # Create file handler
 handler = logging.FileHandler("main_log.txt")
-handler.setLevel(logging.DEBUG)
+handler.setLevel(level)
 
 # Create formatter with desired format
 formatter = MyFormatter('%(levelname)s::%(name)s # %(message)s')

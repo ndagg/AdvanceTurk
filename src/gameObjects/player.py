@@ -17,3 +17,6 @@ class Player:
             self.co = BlankCO(player_number)
         else:
             self.co = co
+
+    def __repr__(self):
+        return f"Player {self.player_number} - {id(self)}"

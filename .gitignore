@@ -16,3 +16,6 @@ uv.lock
 
 # logs
 *_log.txt
+
+# profiles
+scalene*
