@@ -13,58 +13,6 @@ from src.codeUtils.engineExceptions import EngineValueException
 
 logger = logging.getLogger("mainlogger.units")
 
-# =============================================================================
-# Weapons
-# =============================================================================
-# @dataclass
-# class Weapon(ABC):
-#     """
-#     Represents a weapon on a unit
-#     """
-#     targets: list
-    
-#     @abstractmethod
-#     def set_attack(self, unit_id):
-#         ...
-        
-
-
-# @dataclass
-# class PrimaryDirectWeapon(Weapon):
-#     """
-#     Represents a primary direct weapon on a unit
-#     """
-#     ammo: int
-    
-#     def set_attack(self, unit_id):
-#         self.attack = PRIMARY_ATTACK[unit_id]
-    
-    
-# @dataclass
-# class PrimaryIndirectWeapon(Weapon):   
-#     """
-#     Represents a primary indirect weapon on a unit
-#     """
-#     min_range: int
-#     max_range: int
-    
-#     ammo: int
-    
-#     def set_attack(self, unit_id):
-#         self.attack = PRIMARY_ATTACK[unit_id]
-    
-
-# @dataclass
-# class SecondaryWeapon(Weapon):
-#     """
-#     Represents a secondary weapon on a unit
-#     """
-#     min_range = 0
-#     max_range = 1
-    
-#     def set_attack(self, unit_id):
-#         self.attack = SECONDARY_ATTACK[unit_id]
-    
     
 # =============================================================================
 # Transport
@@ -137,15 +85,18 @@ class Unit(ABC):
             self.hidden = False
             self.daily_drain = 5
 
-    def take_damage(self, amount: int):
+    def take_damage(self, amount: int) -> tuple[bool, int]:
         """
-        Apply damage to unit, return False if unit dies
+        Apply damage to unit, return delta value and unit survival
         """
         if self.hp <= amount:
-            return False
+            delta_value = self.cost * self.vhp/10
+            return False, delta_value
+        start_vhp = self.vhp
         self.hp -= amount
         self.vhp = -(self.hp // -10)  # Upside-down floor probably overkill, but avoids floats
-        return True
+        delta_value = self.cost * (start_vhp - self.vhp)/10
+        return True, delta_value
 
     def reduce_fuel(self, amount):
         if self.fuel - amount < 0:

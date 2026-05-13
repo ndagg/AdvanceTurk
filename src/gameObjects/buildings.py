@@ -10,6 +10,7 @@ class Building():
         self.owner = None
         self.cap_points = 20
         self.gloc = gloc
+        self.last_capped_by = None
         
     def capture(self, cap_delta: int, player_id: int) -> bool:
         self.cap_points -= cap_delta

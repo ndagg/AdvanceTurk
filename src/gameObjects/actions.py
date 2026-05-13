@@ -25,7 +25,7 @@ class Move(Action):
     A class for storing unit moves and attacks
     """
     
-    def __init__(self, unit: object, destination: int, fuel: int, attack_target: object=None):
+    def __init__(self, unit: Unit, destination: int, fuel: int, attack_target: Unit=None):
         super().__init__()
         self.unit = unit
         self.destination = destination
@@ -81,4 +81,5 @@ class BuildUnit(Action):
     """
     def __init__(self, unit_type: type, tile: int):
         super().__init__()
-        # TODO
+        self.unit_type = unit_type
+        self.tile = tile

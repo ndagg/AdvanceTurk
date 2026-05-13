@@ -14,10 +14,8 @@ class Evaluator(ABC):
     """
     An abstract class defining how evaluators should behave
     """
-
-    @abstractmethod
-    def __init__(self):
-        pass
+    def __init__(self, primary_player: int=0):
+        self.primary_player = primary_player
 
     @abstractmethod
     def evaluate(self, player):
@@ -28,10 +26,6 @@ class PureValueEvaluator(Evaluator):
     """
     A basic Evaluator taking only unit value into account
     """
-    def __init__(self, primary_player: int=0):
-        self.primary_player = primary_player
-        pass
-
     def unit_value(self, unit: Unit) -> int:
         value = unit.cost * unit.vhp/10
         return value
@@ -44,4 +38,18 @@ class PureValueEvaluator(Evaluator):
         own = gamestate.unit_lists[self.primary_player]
         own_value = sum(self.unit_value(u) for u in own)
 
+        return own_value - opposing_value
+
+
+class PropertyEvaluator(Evaluator):
+    """
+    A basic evaluator taking only captured buildings into account
+    """
+    def evaluate(self, gamestate: GameState):
+        opposing = [i for i in gamestate.buildings_dict.values() if i.owner == 1-self.primary_player]
+        opposing_value = len(opposing) * 1000
+
+        own = [i for i in gamestate.buildings_dict.values() if i.owner == self.primary_player]
+        own_value = len(own) * 1000
+        
         return own_value - opposing_value

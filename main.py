@@ -69,11 +69,11 @@ def main():
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
     # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
 
-    score, move = minimax(gamestate, player1, 3, 0, PureValueEvaluator())
+    score, moves = minimax(gamestate, player1, 3, 0, PureValueEvaluator(), {})
 
 
 
-    print(f"bot complete: {score}, {move}")
+    print(f"bot complete: {score}, {moves}")
 
 
 
