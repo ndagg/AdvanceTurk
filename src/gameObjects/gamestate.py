@@ -10,7 +10,16 @@ import logging
 from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.actions import Action, Move, EndTurn, Capture, BuildUnit
 from src.gameObjects.player import Player
-from src.gameObjects.buildings import Building, ComTower, Lab, HQ, Base, Airport, Port
+from src.gameObjects.cos import CO
+from src.gameObjects.co_files.sonja import Sonja
+from src.gameObjects.buildings import (
+    Building, 
+    ComTower, 
+    Lab, 
+    HQ, 
+    Base, 
+    Airport, 
+    Port)
 from src.gameObjects.units import UNITS, Unit
 
 from src.gameUtils.damage_calc import calc_damage
@@ -144,7 +153,7 @@ class GameState():
 
         if type(action) is Move:
             if action.attack_target is not None:
-                a_survive, d_survive = new_gamestate.make_attack(action)
+                a_survive = new_gamestate.make_attack(action)
                 if a_survive:
                     new_gamestate.move_unit(action)
             else:
@@ -175,6 +184,30 @@ class GameState():
         """
         Apply the effects of an attack to the two units involved
         """
+        def do_combat(
+                attacker: Unit,
+                defender: Unit, 
+                attack_co: CO, 
+                defend_co: CO, 
+                attack_terrain: int, 
+                defend_terrain: int,
+                counter: bool=False
+                ) -> bool:
+            """
+            Simulate the 'attacker' making their strike
+            """
+            hi, lo = calc_damage(
+                attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co, counter
+                )
+            expected = (hi+lo)//2
+            logger.debug(f"{attacker} damages {defender} for {expected} damage")
+
+            d_survive, delta_value = defender.take_damage(expected)
+            logger.debug(f"{defender} survives: {d_survive}")
+            defend_co.gain_charge(delta_value)
+            attack_co.gain_charge(delta_value/2)
+            return d_survive
+        
         attacker = move.unit
         defender = move.attack_target
         attack_co = self.players[attacker.owner].co
@@ -182,44 +215,54 @@ class GameState():
         attack_terrain = self.unit_map.super_graph._node[attacker.glocation]['terrain']
         defend_terrain = self.unit_map.super_graph._node[defender.glocation]['terrain']
 
-        # TODO - consider random variance, and fucking Sonja
-        hi, lo = calc_damage(
-            attacker,
-            defender,
-            attack_terrain,
-            defend_terrain,
-            attack_co,
-            defend_co
+        if not (type(defend_co) is Sonja and defend_co.super_power_active):
+            # Attacker attacks
+            d_survive = do_combat(
+                attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co
             )
-        expected = (hi+lo)//2
-        logger.debug(f"{attacker} damages {defender} for {expected} damage")
-
-        d_survive, delta_value = defender.take_damage(expected)
-        logger.debug(f"{defender} survives: {d_survive}")
-        defend_co.gain_charge(delta_value)
-
-        if d_survive and attacker.direct:
-            hi, lo = calc_damage(
-                defender,
-                attacker,
-                defend_terrain,
-                attack_terrain,
-                defend_co,
-                attack_co
+            if d_survive:
+                # If they live, defender attacks
+                a_survive = do_combat(
+                    defender, attacker, defend_terrain, attack_terrain, defend_co, attack_co, counter=True
+                    )
+                if a_survive:
+                    return a_survive
+                else:
+                    # If attacker is killed
+                    self.check_aborted_capture(defender)
+                    self.unit_lists[defender.owner].remove(defender)
+                    return a_survive
+            else:
+                # If defender is killed
+                a_survive = True
+                self.check_aborted_capture(defender)
+                self.unit_lists[defender.owner].remove(defender)
+                return a_survive
+        
+        # If the defending CO is Sonja with Counter Break active
+        else:
+            # Sonja counter-break, defender attacks first
+            a_survive = do_combat(
+                defender, attacker, defend_terrain, attack_terrain, defend_co, attack_co
                 )
-            expected = (hi+lo)//2
-            a_survive, delta_value = attacker.take_damage(expected)
-            attack_co.gain_charge(delta_value)
-            if not a_survive:
+            if a_survive:
+                # If attacker lives, attacker attacks
+                d_survive = do_combat(
+                    attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co
+                )
+                if d_survive:
+                    # Defender lives
+                    return a_survive
+                else:
+                    # If defender is killed
+                    self.check_aborted_capture(defender)
+                    self.unit_lists[defender.owner].remove(defender)
+                    return a_survive
+            else:
+                # Attacker is killed
                 self.check_aborted_capture(attacker)
                 self.unit_lists[attacker.owner].remove(attacker)
-        else:
-            a_survive = True
-            self.check_aborted_capture(defender)
-            self.unit_lists[defender.owner].remove(defender)
-            
-        
-        return a_survive, d_survive
+                return a_survive
 
     def make_capture(self, capture: Capture):
         """

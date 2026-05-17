@@ -5,7 +5,7 @@ Created on Sun May 25 10:05:39 2025
 @author: ndagg
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import copy
 import logging
 
@@ -14,7 +14,7 @@ from src.gameUtils.aw_lists import (
     SECONDARY_ATTACK,
     TERRAIN_DEFENCE)
 
-from src.gameObjects.units import Unit, ARCHETYPES, UNITS
+from src.gameObjects.units import Unit, UNITS
 from src.gameObjects.actions import Action, SuperPower, COPower
 
 logger = logging.getLogger("mainlogger.cos")
@@ -41,6 +41,7 @@ class CO(ABC):
     num_income_buildings = 0
     
     repair_amount = 20
+    powers_used = 0
 
     def __init__(self, player_number: int):
         self.unit_factory_init()
@@ -92,6 +93,10 @@ class CO(ABC):
         self.co_defence = [i + 10 for i in self.co_defence]
         self.co_power_active = True
         self.power_meter -= self.co_power_cost
+        if self.powers_used < 10:
+            self.co_power_cost *= 1.2
+            self.super_power_cost *= 1.2
+            self.powers_used += 1
         
     def end_co_power(self, gamestate):
         """
@@ -109,6 +114,10 @@ class CO(ABC):
         self.co_defence = [i + 10 for i in self.co_defence]
         self.super_power_active = True
         self.power_meter = 0
+        if self.powers_used < 10:
+            self.co_power_cost *= 1.2
+            self.super_power_cost *= 1.2
+            self.powers_used += 1
         
     def end_super_power(self, gamestate: object):
         """
@@ -132,7 +141,7 @@ class CO(ABC):
         self.com_towers -= 1
         self.co_attack = [i - 10 for i in self.co_attack]
     
-    def attack_calculator(self, a_unit: Unit, d_unit: Unit, a_terrain: int) -> tuple[int]:
+    def attack_calculator(self, a_unit: Unit, d_unit: Unit, a_terrain: int, counter: bool) -> tuple[int]:
         """
         Calculate the default attack range during a combat
         """
