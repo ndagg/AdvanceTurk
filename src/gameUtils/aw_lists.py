@@ -75,7 +75,6 @@ SECONDARY_ATTACK = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ]
 
-ANY_ATTACK = PRIMARY_ATTACK + SECONDARY_ATTACK
 
 
 # TODO - add rain and snow

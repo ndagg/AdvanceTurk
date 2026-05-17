@@ -79,7 +79,7 @@ class BuildUnit(Action):
     """
     A class for representing creating new units
     """
-    def __init__(self, unit_type: type, tile: int):
+    def __init__(self, unit_type_id: int, tile: int):
         super().__init__()
-        self.unit_type = unit_type
+        self.unit_type_id = unit_type_id
         self.tile = tile

@@ -7,6 +7,7 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
+from src.gameObjects.unitmap import UnitMap
 from src.gameObjects.actions import Action, Move, EndTurn, Capture, BuildUnit
 from src.gameObjects.player import Player
 from src.gameObjects.buildings import Building, ComTower, Lab, HQ, Base, Airport, Port
@@ -23,9 +24,9 @@ class GameState():
     def __init__(
             self,
             players: list[Player],
-            unit_lists: list[list],
-            buildings_dict: dict[int: Building],
-            unit_map: object):
+            unit_lists: list[list[Unit]],
+            buildings_dict: dict[int, Building],
+            unit_map: UnitMap):
         # Stateful - needs deepcopy
         self.players = players
         self.current_player = players[0]
@@ -45,6 +46,7 @@ class GameState():
         """
         # Regular moves
         moves = self.get_moves()
+        # TODO - pipeseam attacks
 
         # Captures
         captures = self.get_captures(moves)
@@ -54,6 +56,8 @@ class GameState():
 
         # Unit builds
         builds = self.get_builds() 
+
+        # TODO - hides, black boat repairs, joins, deletes, resupplies, embark/deploy
 
         actions = moves + captures + powers + builds
 
@@ -104,11 +108,15 @@ class GameState():
         Return a list of available unit builds for the current player
         """
         # Get dict of available production buildings
-        production = {k: v for k, v in self.buildings_dict.items() if v.owner == self.current_player_id}
+        production = {
+            k: v for k, v in self.buildings_dict.items()
+              if v.owner == self.current_player_id
+                and type(v) in (Base, Airport, Port)
+                }
         for p in self.unit_lists:
             for u in p:
                 if u.glocation in production.keys():
-                    production.remove(u.glocation)
+                    del production[u.glocation]
         
         builds = []
         unit_factory = self.current_player.co.factory_list
@@ -121,7 +129,7 @@ class GameState():
                 unit_id_range = range(18, 24)
 
             for i in unit_id_range:
-                if unit_factory[i].cost <= self.current_player.funds:
+                if unit_factory[i].cost <= self.current_player.co.funds:
                     builds.append(BuildUnit(gloc, i))
         
         return builds
@@ -134,7 +142,6 @@ class GameState():
         new_gamestate = self.make_new_state()
         action = new_gamestate.current_actions[ind]
 
-        
         if type(action) is Move:
             if action.attack_target is not None:
                 a_survive, d_survive = new_gamestate.make_attack(action)
@@ -144,14 +151,13 @@ class GameState():
                 new_gamestate.move_unit(action)
         
         elif type(action) is BuildUnit:
-            pass  # TODO implement buildunit result
+            new_gamestate.make_build(action)
         
         elif type(action) is Capture:
             new_gamestate.make_capture(action)
             
         elif type(action) is EndTurn:
-            new_gamestate.current_player_id = 1 - new_gamestate.current_player_id
-            new_gamestate.current_player = new_gamestate.players[new_gamestate.current_player_id]
+            new_gamestate.make_end_turn()
         return new_gamestate
     
     def move_unit(self, move: Move):
@@ -242,13 +248,49 @@ class GameState():
         """
         Apply the effects of a BuildUnit action
         """
-        unit = build.unit()
+        unit_id = build.unit_type_id
+        unit = self.current_player.co.unit_factory(unit_id)
         unit.owner = self.current_player_id
         unit.set_gloc(build.glocation, self.unit_map.dims)
         unit.active = False
         self.current_player.co.funds -= unit.cost
-        ### 
+        self.unit_lists[self.current_player_id].append(unit)
+
+    def make_end_turn(self):
+        """
+        Apply the effects of a EndTurn
+        """
+        self.current_player_id = 1 - self.current_player_id
+        self.current_player = self.players[self.current_player_id]
         
+        # Repairs and restocks
+        cp = self.current_player_id
+        new_turn_co = self.current_player.co
+        sunk = []
+        for u in self.unit_lists[cp]:
+            u.active = True  # TODO - handle Von Bolt super
+            on_building = self.buildings_dict.get(u.location, False)
+            if on_building and on_building.owner == cp and type(on_building) not in (Lab, ComTower):
+                repair_amount = new_turn_co.repair_amount
+                cost = u.repair(repair_amount, new_turn_co.funds)
+                new_turn_co.funds -= cost
+                
+                u.ammo = new_turn_co.factory_list[u.id].ammo
+                u.fuel = new_turn_co.factory_list[u.id].fuel
+            alive = u.daily_drain()
+            if not alive:
+                sunk.append(u)
+                continue
+        
+        if new_turn_co.co_power_active:
+            new_turn_co.end_co_power()
+        
+        if new_turn_co.super_power_active:
+            new_turn_co.end_super_power()
+        
+        # Gain funds
+        new_turn_co.funds += new_turn_co.calculate_income()
+
     def check_aborted_capture(self, unit: Unit):
         """
         Check whether a move has resulted in a cancelled building capture
@@ -292,7 +334,7 @@ class GameState():
         new.current_player_id = self.current_player_id
         new.unit_map = self.unit_map
         # Deep copies - done as single dict so that units in actions and lists match
-        dcs = {k:self.__dict__[k] for k in (
+        dcs = {k: self.__dict__[k] for k in (
             "current_actions", 
             "unit_lists",
             "buildings_dict",

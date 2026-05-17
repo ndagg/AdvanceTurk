@@ -8,7 +8,7 @@ import networkx as nx
 import logging
 
 from src.gameUtils.indirect_range import get_indirect_attack_tiles
-from src.gameUtils.aw_lists import ANY_ATTACK
+from src.gameUtils.aw_lists import PRIMARY_ATTACK, SECONDARY_ATTACK
 
 from src.gameObjects.gamemap import BaseMap
 from src.gameObjects.actions import Move
@@ -73,11 +73,20 @@ class UnitMap():
             
         else:  # Case for unit which is on impassable tile
             no_att = [Move(unit, unit.glocation, 0)]
+
+        # Attacks
+        if unit.ammo != 0:
+            can_attack = PRIMARY_ATTACK[unit.id]
+        else:
+            can_attack = SECONDARY_ATTACK[unit.id]
+            if not sum(can_attack):
+                return no_att  # Case where no secondary weapon
+        
         # Get attackable tiles for direct units, this could be a lot more efficient
         att = []
         if unit.direct:
             for eunit in targets:
-                if not ANY_ATTACK[unit.id][eunit.id]:
+                if not can_attack[eunit.id]:
                     continue  # skip if unit can't attack this type
                 for t in no_att:
                     attacks = self.super_graph.neighbors(t.destination)
@@ -87,10 +96,10 @@ class UnitMap():
         # Get attackable tiles for indirect units
         else:
             att_tiles = self.generate_indirect_attack_tiles(unit.glocation, unit.min_range, unit.max_range, self.dims)
-            for t in att_tiles:
-                for eunit in targets:
-                    if not ANY_ATTACK[unit.id][eunit.id]:
-                        continue  # skip if unit can't attack this type
+            for eunit in targets:
+                if not can_attack[eunit.id]:
+                    continue  # skip if unit can't attack this type
+                for t in att_tiles:
                     if t == eunit.glocation:
                         att.append(Move(unit, unit.gloc, 0, eunit))
                         break
