@@ -77,7 +77,7 @@ class Unit(ABC):
         self.location = None
         self.glocation = None
 
-    def daily_drain(self) -> bool:
+    def do_daily_drain(self) -> bool:
         """
         Apply daily fuel drain (if any), return false if dead due to drain
         """

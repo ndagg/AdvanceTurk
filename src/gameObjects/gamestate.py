@@ -139,7 +139,7 @@ class GameState():
 
             for i in unit_id_range:
                 if unit_factory[i].cost <= self.current_player.co.funds:
-                    builds.append(BuildUnit(gloc, i))
+                    builds.append(BuildUnit(i, gloc))
         
         return builds
 
@@ -197,7 +197,7 @@ class GameState():
             Simulate the 'attacker' making their strike
             """
             hi, lo = calc_damage(
-                attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co, counter
+                attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain, counter
                 )
             expected = (hi+lo)//2
             logger.debug(f"{attacker} damages {defender} for {expected} damage")
@@ -218,12 +218,12 @@ class GameState():
         if not (type(defend_co) is Sonja and defend_co.super_power_active):
             # Attacker attacks
             d_survive = do_combat(
-                attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co
+                attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain
             )
             if d_survive:
                 # If they live, defender attacks
                 a_survive = do_combat(
-                    defender, attacker, defend_terrain, attack_terrain, defend_co, attack_co, counter=True
+                    defender, attacker, defend_co, attack_co, defend_terrain, attack_terrain, counter=True
                     )
                 if a_survive:
                     return a_survive
@@ -243,12 +243,12 @@ class GameState():
         else:
             # Sonja counter-break, defender attacks first
             a_survive = do_combat(
-                defender, attacker, defend_terrain, attack_terrain, defend_co, attack_co
+                defender, attacker, defend_co, attack_co, defend_terrain, attack_terrain
                 )
             if a_survive:
                 # If attacker lives, attacker attacks
                 d_survive = do_combat(
-                    attacker, defender, attack_terrain, defend_terrain, attack_co, defend_co
+                    attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain
                 )
                 if d_survive:
                     # Defender lives
@@ -320,16 +320,16 @@ class GameState():
                 
                 u.ammo = new_turn_co.factory_list[u.id].ammo
                 u.fuel = new_turn_co.factory_list[u.id].fuel
-            alive = u.daily_drain()
+            alive = u.do_daily_drain()
             if not alive:
                 sunk.append(u)
                 continue
         
         if new_turn_co.co_power_active:
-            new_turn_co.end_co_power()
+            new_turn_co.end_co_power(self)
         
         if new_turn_co.super_power_active:
-            new_turn_co.end_super_power()
+            new_turn_co.end_super_power(self)
         
         # Gain funds
         new_turn_co.funds += new_turn_co.calculate_income()

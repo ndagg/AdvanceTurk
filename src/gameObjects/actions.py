@@ -34,7 +34,7 @@ class Move(Action):
     
     def __repr__(self):
         return f"Move(unit: {self.unit.__class__.__name__}, dest: {self.destination}, attack: {self.attack_target})"
-    
+
 
 class EndTurn(Action):
     """
@@ -57,6 +57,10 @@ class Capture(Action):
         self.fuel_cost = move.fuel_cost
         self.building = building
 
+    def __repr__(self):
+        return f"Capture at {self.building.gloc}"
+
+
 class COPower(Action):
     """
     A class for representing COPower activations
@@ -73,13 +77,16 @@ class SuperPower(Action):
     def __init__(self):
         super().__init__()
         # TODO
-
-
+    
+    
 class BuildUnit(Action):
     """
     A class for representing creating new units
     """
-    def __init__(self, unit_type_id: int, tile: int):
+    def __init__(self, unit_type_id: int, glocation: int):
         super().__init__()
         self.unit_type_id = unit_type_id
-        self.tile = tile
+        self.glocation = glocation
+
+    def __repr__(self):
+        return f"Build(unit: {self.unit.__class__.__name__}, location: {self.glocation})"

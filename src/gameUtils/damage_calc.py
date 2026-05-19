@@ -13,10 +13,10 @@ def round_partial(value: float, resolution: float):
 def calc_damage(
         a_unit: Unit,
         d_unit: Unit,
-        a_terrain: int,
-        d_terrain: int,
         a_co: CO,
         d_co: CO,
+        a_terrain: int,
+        d_terrain: int,
         counter: bool
         ) -> list[int]:
     """

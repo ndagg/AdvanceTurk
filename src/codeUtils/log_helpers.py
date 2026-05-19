@@ -29,7 +29,7 @@ class MyFormatter(logging.Formatter):
 with open("main_log.txt", "w") as file:
     file.write("")
 
-level = logging.WARNING
+level = logging.DEBUG
 
 logger = logging.getLogger("mainlogger")
 logger.setLevel(level)

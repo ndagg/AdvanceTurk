@@ -98,7 +98,7 @@ class CO(ABC):
             self.super_power_cost *= 1.2
             self.powers_used += 1
         
-    def end_co_power(self, gamestate):
+    def end_co_power(self, gamestate: object):
         """
         Remove all default temporary effects of a power from the gameboard
         """
