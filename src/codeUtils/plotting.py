@@ -200,3 +200,44 @@ def plot_units_on_map(units, ax):
     
     ax.imshow(img._A)
     return ax
+
+
+def plot_glocs_on_map(ax, dims):
+    """
+    Add text labels showing 1-dimensional grid indices to each tile on the map.
+    
+    For a grid with dimensions (rows, cols), the index for tile (row, col) 
+    is calculated as: row * cols + col
+    
+    Args:
+        ax: matplotlib axis with the map image
+        dims: tuple of (rows, cols) representing grid dimensions
+    """
+    rows, cols = dims
+    
+    for row in range(rows):
+        for col in range(cols):
+            # Calculate 1-dimensional index
+            index = row * cols + col
+            
+            # Calculate pixel position (center of tile)
+            x = col * TILEPX + TILEHF
+            y = row * TILEPX + TILEHF
+            
+            # Add text label at the center of the tile
+            ax.text(x, y, str(index), 
+                   fontsize=6, 
+                   ha='center', 
+                   va='center',
+                   color='white',
+                   weight='bold',
+                   alpha=0.7,
+                #    bbox=dict(boxstyle='round,pad=0.3', 
+                #             facecolor='black', 
+                #             edgecolor='white', 
+                #             linewidth=0.5,
+                #             alpha=0.7)
+                            )
+    
+    return ax
+    
