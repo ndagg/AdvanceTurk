@@ -58,6 +58,7 @@ def minimax(gamestate: GameState,
             best_actions)
         
         logger.parent.handlers[0].formatter.indent = current_depth
+        logger.parent.handlers[0].formatter.current_player = gamestate.current_player_id
         
         # Update best score
         if gamestate.current_player_id == player.player_number:
@@ -71,7 +72,7 @@ def minimax(gamestate: GameState,
             if current_score < best_score:
                 logger.debug(f"New best score: {current_score}, previous score: {best_score}")
                 best_score = current_score
-                best_actions[current_depth] = move
+                # best_actions[current_depth] = move
             else:
                 logger.debug(f"No improvement, current score: {best_score}, discarded score: {current_score}")
     

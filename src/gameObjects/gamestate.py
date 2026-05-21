@@ -61,10 +61,12 @@ class GameState():
         captures = self.get_captures(moves)
 
         # CO Powers
-        powers = self.current_player.co.powers_available()
+        # powers = self.current_player.co.powers_available()
+        powers = []
 
         # Unit builds
-        builds = self.get_builds() 
+        # builds = self.get_builds()
+        builds = []
 
         # TODO - hides, black boat repairs, joins, deletes, resupplies, embark/deploy
 
@@ -271,6 +273,7 @@ class GameState():
         cap_delta = capture.unit.capture_power * capture.unit.vhp
         original_owner = capture.building.owner
         capped = capture.building.capture(cap_delta, self.current_player_id)
+        capture.unit.active = False
         if capped:
             logger.debug(
                 f"Capture of {capture.building} from {capture.building.owner} by {capture.unit.owner}"

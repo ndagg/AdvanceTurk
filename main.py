@@ -16,7 +16,8 @@ from src.codeUtils.plotting import (
     plot_map_image,
     plot_moves,
     add_edge_labels,
-    plot_units_on_map
+    plot_units_on_map,
+    plot_glocs_on_map
     )
 
 from src.gameIntelligence.minimax import minimax
@@ -43,22 +44,22 @@ def main():
     unit_lists = reader.generate_unit_lists()
     building_dict = reader.generate_building_dict()
 
-    for l in unit_lists:
-        for u in l:
-            u.fuel = 0
+    # for l in unit_lists:
+    #     for u in l:
+    #         u.fuel = 0
 
-    # tank = Tank(0)
-    # inf = Infantry(0)
-    # recon = Recon(1)
+    tank = Tank(0)
+    inf = Infantry(0)
+    recon = Recon(1)
     # arty = Artillery(0)
-    # inf.set_loc((8, 12), gmap.dims)
-    # tank.set_loc((7, 13), gmap.dims)
-    # recon.set_loc((8, 13), gmap.dims)
+    inf.set_loc((8, 12), gmap.dims)
+    tank.set_loc((7, 13), gmap.dims)
+    recon.set_loc((8, 13), gmap.dims)
     # arty.set_loc((8, 12), gmap.dims)
-    # unit_lists =  [[tank, inf], [recon]]
-    # tank.fuel = 1
-    # inf.fuel = 1
-    # recon.fuel = 4
+    unit_lists =  [[tank, inf], [recon]]
+    tank.fuel = 0
+    inf.fuel = 0
+    recon.fuel = 4
 
     umap = UnitMap(gmap)
     gamestate = GameState([player1, player2], unit_lists, building_dict, umap)
@@ -66,13 +67,11 @@ def main():
     # gamestate.get_actions()
  
     # ax = plot_map_image(gmap, building_dict)
+    # ax = plot_glocs_on_map(ax, gmap.dims)
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
     # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
 
     score, moves = minimax(gamestate, player1, 3, 0, PureValueEvaluator(), {})
-
-
-
     print(f"bot complete: {score}, {moves}")
 
 
