@@ -7,9 +7,20 @@ Created on Wed Apr 08 20:27:07 2026
 from copy import copy, deepcopy
 import logging
 
-from src.gameObjects.actions import Action, Move, EndTurn, Capture
+from src.gameObjects.unitmap import UnitMap
+from src.gameObjects.actions import Action, Move, EndTurn, Capture, BuildUnit
 from src.gameObjects.player import Player
-from src.gameObjects.buildings import Building, ComTower, Lab, HQ
+from src.gameObjects.cos import CO
+from src.gameObjects.co_files.sonja import Sonja
+from src.gameObjects.buildings import (
+    Building, 
+    ComTower, 
+    Lab, 
+    HQ, 
+    Base, 
+    Airport, 
+    Port)
+from src.gameObjects.units import UNITS, Unit
 
 from src.gameUtils.damage_calc import calc_damage
 
@@ -22,15 +33,16 @@ class GameState():
     def __init__(
             self,
             players: list[Player],
-            unit_lists: list[list],
-            buildings_dict: dict[int: Building],
-            unit_map: object):
+            unit_lists: list[list[Unit]],
+            buildings_dict: dict[int, Building],
+            unit_map: UnitMap):
         # Stateful - needs deepcopy
         self.players = players
         self.current_player = players[0]
         self.buildings_dict = buildings_dict
         self.unit_lists = unit_lists
         self.current_actions = []
+        self.caps_in_progress = []
 
         # No state - direct reference
         self.current_player_id = players[0].player_number
@@ -43,15 +55,20 @@ class GameState():
         """
         # Regular moves
         moves = self.get_moves()
+        # TODO - pipeseam attacks
 
         # Captures
         captures = self.get_captures(moves)
 
         # CO Powers
-        powers = self.current_player.co.powers_available()
+        # powers = self.current_player.co.powers_available()
+        powers = []
 
         # Unit builds
+        # builds = self.get_builds()
         builds = []
+
+        # TODO - hides, black boat repairs, joins, deletes, resupplies, embark/deploy
 
         actions = moves + captures + powers + builds
 
@@ -90,14 +107,45 @@ class GameState():
         """
         cap_actions = []
         for m in moves:
-            dest = m.destination
             if m.unit.id < 2 and m.attack_target is None:
+                dest = m.destination
                 if dest in self.buildings_dict.keys():
                     if self.buildings_dict[dest].owner != self.current_player_id:
                         cap_actions.append(Capture(m, self.buildings_dict[dest]))
         return cap_actions
+    
+    def get_builds(self) -> list[BuildUnit]:
+        """
+        Return a list of available unit builds for the current player
+        """
+        # Get dict of available production buildings
+        production = {
+            k: v for k, v in self.buildings_dict.items()
+              if v.owner == self.current_player_id
+                and type(v) in (Base, Airport, Port)
+                }
+        for p in self.unit_lists:
+            for u in p:
+                if u.glocation in production.keys():
+                    del production[u.glocation]
+        
+        builds = []
+        unit_factory = self.current_player.co.factory_list
+        for gloc, v in production.items():
+            if type(v) is Base:
+                unit_id_range = range(13)
+            elif type(v) is Airport:
+                unit_id_range = range(13, 18)
+            elif type(v) is Port:
+                unit_id_range = range(18, 24)
 
-    def make_action_on_new_state(self, original_action: object, ind: int) -> object:
+            for i in unit_id_range:
+                if unit_factory[i].cost <= self.current_player.co.funds:
+                    builds.append(BuildUnit(i, gloc))
+        
+        return builds
+
+    def make_action_on_new_state(self, original_action: Action, ind: int) -> object:
         """
         Create a new gamestate and apply the effects of a Move to it
         """
@@ -105,35 +153,63 @@ class GameState():
         new_gamestate = self.make_new_state()
         action = new_gamestate.current_actions[ind]
 
-        
         if type(action) is Move:
             if action.attack_target is not None:
-                a_survive, d_survive = new_gamestate.make_attack(action)
+                a_survive = new_gamestate.make_attack(action)
                 if a_survive:
                     new_gamestate.move_unit(action)
             else:
                 new_gamestate.move_unit(action)
         
+        elif type(action) is BuildUnit:
+            new_gamestate.make_build(action)
+        
         elif type(action) is Capture:
             new_gamestate.make_capture(action)
-
+            
         elif type(action) is EndTurn:
-            new_gamestate.current_player_id = 1 - new_gamestate.current_player_id
-            new_gamestate.curren_player = new_gamestate.players[new_gamestate.current_player_id]
+            new_gamestate.make_end_turn()
         return new_gamestate
     
-    def move_unit(self, move: object):
+    def move_unit(self, move: Move):
         """
-        Apply relocating (no attack) Move to a unit
+        Apply relocating Move to a unit
         """
         move.unit.set_gloc(move.destination, self.unit_map.dims)
         move.unit.reduce_fuel(move.fuel_cost)
         move.unit.active = False
-    
-    def make_attack(self, move: object) -> tuple[bool]:
+        
+        # Check if this is abandonning a capture
+        self.check_aborted_capture(move.unit)
+
+    def make_attack(self, move: Move) -> tuple[bool]:
         """
         Apply the effects of an attack to the two units involved
         """
+        def do_combat(
+                attacker: Unit,
+                defender: Unit, 
+                attack_co: CO, 
+                defend_co: CO, 
+                attack_terrain: int, 
+                defend_terrain: int,
+                counter: bool=False
+                ) -> bool:
+            """
+            Simulate the 'attacker' making their strike
+            """
+            hi, lo = calc_damage(
+                attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain, counter
+                )
+            expected = (hi+lo)//2
+            logger.debug(f"{attacker} damages {defender} for {expected} damage")
+
+            d_survive, delta_value = defender.take_damage(expected)
+            logger.debug(f"{defender} survives: {d_survive}")
+            defend_co.gain_charge(delta_value)
+            attack_co.gain_charge(delta_value/2)
+            return d_survive
+        
         attacker = move.unit
         defender = move.attack_target
         attack_co = self.players[attacker.owner].co
@@ -141,63 +217,136 @@ class GameState():
         attack_terrain = self.unit_map.super_graph._node[attacker.glocation]['terrain']
         defend_terrain = self.unit_map.super_graph._node[defender.glocation]['terrain']
 
-        # TODO - consider random variance, and fucking Sonja
-        hi, lo = calc_damage(
-            attacker,
-            defender,
-            attack_terrain,
-            defend_terrain,
-            attack_co,
-            defend_co
+        if not (type(defend_co) is Sonja and defend_co.super_power_active):
+            # Attacker attacks
+            d_survive = do_combat(
+                attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain
             )
-        expected = (hi+lo)//2
-        logger.debug(f"{attacker} damages {defender} for {expected} damage")
-
-        d_survive = defender.take_damage(expected)
-        logger.debug(f"{defender} survives: {d_survive}")
-
-        if d_survive and attacker.direct:
-            hi, lo = calc_damage(
-                defender,
-                attacker,
-                defend_terrain,
-                attack_terrain,
-                defend_co,
-                attack_co
-                )
-            expected = (hi+lo)//2
-            a_survive = attacker.take_damage(expected)
-            if not a_survive:
-                self.unit_lists[attacker.owner].remove(attacker)
-        else:
-            a_survive = True
-            self.unit_lists[defender.owner].remove(defender)
+            if d_survive:
+                # If they live, defender attacks
+                a_survive = do_combat(
+                    defender, attacker, defend_co, attack_co, defend_terrain, attack_terrain, counter=True
+                    )
+                if a_survive:
+                    return a_survive
+                else:
+                    # If attacker is killed
+                    self.check_aborted_capture(defender)
+                    self.unit_lists[defender.owner].remove(defender)
+                    return a_survive
+            else:
+                # If defender is killed
+                a_survive = True
+                self.check_aborted_capture(defender)
+                self.unit_lists[defender.owner].remove(defender)
+                return a_survive
         
-        return a_survive, d_survive
+        # If the defending CO is Sonja with Counter Break active
+        else:
+            # Sonja counter-break, defender attacks first
+            a_survive = do_combat(
+                defender, attacker, defend_co, attack_co, defend_terrain, attack_terrain
+                )
+            if a_survive:
+                # If attacker lives, attacker attacks
+                d_survive = do_combat(
+                    attacker, defender, attack_co, defend_co, attack_terrain, defend_terrain
+                )
+                if d_survive:
+                    # Defender lives
+                    return a_survive
+                else:
+                    # If defender is killed
+                    self.check_aborted_capture(defender)
+                    self.unit_lists[defender.owner].remove(defender)
+                    return a_survive
+            else:
+                # Attacker is killed
+                self.check_aborted_capture(attacker)
+                self.unit_lists[attacker.owner].remove(attacker)
+                return a_survive
 
     def make_capture(self, capture: Capture):
         """
         Apply the effects of a capture action
         """
         cap_delta = capture.unit.capture_power * capture.unit.vhp
-        original_owner = self.players[capture.building.owner]
+        original_owner = capture.building.owner
         capped = capture.building.capture(cap_delta, self.current_player_id)
+        capture.unit.active = False
         if capped:
             logger.debug(
                 f"Capture of {capture.building} from {capture.building.owner} by {capture.unit.owner}"
                 )
             if type(capture.building) not in (ComTower, Lab):
-                original_owner.co.num_income_buildings -= 1
+                if original_owner is not None:
+                    self.players[original_owner].co.num_income_buildings -= 1
                 self.current_player.co.num_income_buildings += 1
                 if type(capture.building) is HQ:
                     # This attribute will only exist in this circumstance
                     self.hq_cap = capture.building.owner
-            if type(capture.building) is ComTower:
-                original_owner.co.remove_com_tower()
+            elif type(capture.building) is ComTower:
+                if original_owner is not None:
+                    self.players[original_owner].co.remove_com_tower()
                 self.current_player.co.add_com_tower()
-                
-        # TODO - track in-progress captures, account for lab captures
+        
+    def make_build(self, build: BuildUnit):
+        """
+        Apply the effects of a BuildUnit action
+        """
+        unit_id = build.unit_type_id
+        unit = self.current_player.co.unit_factory(unit_id)
+        unit.owner = self.current_player_id
+        unit.set_gloc(build.glocation, self.unit_map.dims)
+        unit.active = False
+        self.current_player.co.funds -= unit.cost
+        self.unit_lists[self.current_player_id].append(unit)
 
+    def make_end_turn(self):
+        """
+        Apply the effects of a EndTurn
+        """
+        self.current_player_id = 1 - self.current_player_id
+        self.current_player = self.players[self.current_player_id]
+        
+        # Repairs and restocks
+        cp = self.current_player_id
+        new_turn_co = self.current_player.co
+        sunk = []
+        for u in self.unit_lists[cp]:
+            u.active = True  # TODO - handle Von Bolt super
+            on_building = self.buildings_dict.get(u.location, False)
+            if on_building and on_building.owner == cp and type(on_building) not in (Lab, ComTower):
+                repair_amount = new_turn_co.repair_amount
+                cost = u.repair(repair_amount, new_turn_co.funds)
+                new_turn_co.funds -= cost
+                
+                u.ammo = new_turn_co.factory_list[u.id].ammo
+                u.fuel = new_turn_co.factory_list[u.id].fuel
+            alive = u.do_daily_drain()
+            if not alive:
+                sunk.append(u)
+                continue
+        
+        if new_turn_co.co_power_active:
+            new_turn_co.end_co_power(self)
+        
+        if new_turn_co.super_power_active:
+            new_turn_co.end_super_power(self)
+        
+        # Gain funds
+        new_turn_co.funds += new_turn_co.calculate_income()
+
+    def check_aborted_capture(self, unit: Unit):
+        """
+        Check whether a move has resulted in a cancelled building capture
+        """
+        if unit.id < 3:
+            try:
+                self.buildings_dict[unit.glocation].cap_points = 20
+            except KeyError:
+                pass
+            
     def evaluate(self, evaluator: object) -> int:
         """
         Determine the value of the current player's position
@@ -231,7 +380,7 @@ class GameState():
         new.current_player_id = self.current_player_id
         new.unit_map = self.unit_map
         # Deep copies - done as single dict so that units in actions and lists match
-        dcs = {k:self.__dict__[k] for k in (
+        dcs = {k: self.__dict__[k] for k in (
             "current_actions", 
             "unit_lists",
             "buildings_dict",
@@ -239,4 +388,3 @@ class GameState():
             "current_player")}
         new.__dict__.update(deepcopy(dcs))
         return new
-

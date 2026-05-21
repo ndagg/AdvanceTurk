@@ -6,7 +6,7 @@ Created on Sat Nov  8 15:52:24 2025
 """
 
 from src.gameObjects.buildings import Building
-from src.gameObjects.units import Unit
+from src.gameObjects.units import Unit, UNIT_NAMES
 
 class Action():
     """
@@ -25,7 +25,7 @@ class Move(Action):
     A class for storing unit moves and attacks
     """
     
-    def __init__(self, unit: object, destination: int, fuel: int, attack_target: object=None):
+    def __init__(self, unit: Unit, destination: int, fuel: int, attack_target: Unit=None):
         super().__init__()
         self.unit = unit
         self.destination = destination
@@ -33,8 +33,8 @@ class Move(Action):
         self.attack_target = attack_target
     
     def __repr__(self):
-        return f"Move(unit: {self.unit.__class__.__name__}, dest: {self.destination}, attack: {self.attack_target})"
-    
+        return f"Move {self.unit.__class__.__name__} from {self.unit.glocation} to {self.destination}, attack: {self.attack_target}"
+
 
 class EndTurn(Action):
     """
@@ -57,6 +57,10 @@ class Capture(Action):
         self.fuel_cost = move.fuel_cost
         self.building = building
 
+    def __repr__(self):
+        return f"Capture {self.building.__class__.__name__} at {self.building.gloc} from {self.unit.glocation}"
+
+
 class COPower(Action):
     """
     A class for representing COPower activations
@@ -73,12 +77,16 @@ class SuperPower(Action):
     def __init__(self):
         super().__init__()
         # TODO
-
-
+    
+    
 class BuildUnit(Action):
     """
     A class for representing creating new units
     """
-    def __init__(self, unit_type: type, tile: int):
+    def __init__(self, unit_type_id: int, glocation: int):
         super().__init__()
-        # TODO
+        self.unit_type_id = unit_type_id
+        self.glocation = glocation
+
+    def __repr__(self):
+        return f"Build(unit: {UNIT_NAMES[self.unit_type_id]}, location: {self.glocation})"

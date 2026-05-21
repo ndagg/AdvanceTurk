@@ -13,58 +13,6 @@ from src.codeUtils.engineExceptions import EngineValueException
 
 logger = logging.getLogger("mainlogger.units")
 
-# =============================================================================
-# Weapons
-# =============================================================================
-# @dataclass
-# class Weapon(ABC):
-#     """
-#     Represents a weapon on a unit
-#     """
-#     targets: list
-    
-#     @abstractmethod
-#     def set_attack(self, unit_id):
-#         ...
-        
-
-
-# @dataclass
-# class PrimaryDirectWeapon(Weapon):
-#     """
-#     Represents a primary direct weapon on a unit
-#     """
-#     ammo: int
-    
-#     def set_attack(self, unit_id):
-#         self.attack = PRIMARY_ATTACK[unit_id]
-    
-    
-# @dataclass
-# class PrimaryIndirectWeapon(Weapon):   
-#     """
-#     Represents a primary indirect weapon on a unit
-#     """
-#     min_range: int
-#     max_range: int
-    
-#     ammo: int
-    
-#     def set_attack(self, unit_id):
-#         self.attack = PRIMARY_ATTACK[unit_id]
-    
-
-# @dataclass
-# class SecondaryWeapon(Weapon):
-#     """
-#     Represents a secondary weapon on a unit
-#     """
-#     min_range = 0
-#     max_range = 1
-    
-#     def set_attack(self, unit_id):
-#         self.attack = SECONDARY_ATTACK[unit_id]
-    
     
 # =============================================================================
 # Transport
@@ -129,7 +77,16 @@ class Unit(ABC):
         self.location = None
         self.glocation = None
 
+    def do_daily_drain(self) -> bool:
+        """
+        Apply daily fuel drain (if any), return false if dead due to drain
+        """
+        return True
+
     def hide_unhide(self):
+        """
+        Apply a hide or unhide action to the unit
+        """
         if not self.hidden:
             self.hidden = True
             self.daily_drain = 8
@@ -137,17 +94,41 @@ class Unit(ABC):
             self.hidden = False
             self.daily_drain = 5
 
-    def take_damage(self, amount: int):
+    def take_damage(self, amount: int) -> tuple[bool, int]:
         """
-        Apply damage to unit, return False if unit dies
+        Apply damage to unit, return delta value and unit survival
         """
         if self.hp <= amount:
-            return False
+            delta_value = self.cost * self.vhp/10
+            return False, delta_value
+        start_vhp = self.vhp
         self.hp -= amount
         self.vhp = -(self.hp // -10)  # Upside-down floor probably overkill, but avoids floats
-        return True
+        delta_value = self.cost * (start_vhp - self.vhp)/10
+        return True, delta_value
+    
+    def repair(self, amount: int, budget: int) -> int:
+        """
+        Apply a repair to the unit if there is sufficient budget
+        """
+        if self.vhp < 9:
+            if self.cost * 0.2 > budget:
+                return 0
+        elif self.cost * 0.1 > budget:
+            return 0
+        self.hp += amount
+        if self.hp > 100:
+            self.hp = 100
+        start_vhp = self.vhp
+        self.hp += amount
+        self.vhp = -(self.hp // -10)
+        delta_value = self.cost * (self.vhp - start_vhp)/10
+        return delta_value
 
     def reduce_fuel(self, amount):
+        """
+        Apply the reduction in fuel required by a move
+        """
         if self.fuel - amount < 0:
             raise EngineValueException(
                 f"{self} - Attempting to spend more fuel than remains\n"
@@ -156,6 +137,28 @@ class Unit(ABC):
             logger.debug(
                 f"{self.__class__.__name__} reducing fuel from {self.fuel} by {amount}, id: {hex(id(self))}")
             self.fuel -= amount
+
+    def join(self, unit: object, archetype_dict: dict):
+        """
+        Merge two units resource pools
+        """
+        self.fuel += unit.fuel
+        if self.fuel > archetype_dict["fuel"]:
+            self.fuel = archetype_dict["fuel"]
+        self.ammo += unit.ammo
+        if self.ammo > archetype_dict["ammo"]:
+            self.ammo = archetype_dict["ammo"]
+
+        vhp_sum = self.vhp + unit.vhp
+        value_gain = (vhp_sum-10)/10 * self.value
+        if value_gain < 0:
+            value_gain = 0
+            self.vhp = self.vhp
+        else:
+            self.vhp = 10
+        self.hp = self.vhp * 10  # Assumes best case, not sure how the game handles this
+
+        return value_gain
 
     def set_loc(self, loc, dims):
         self.location = loc
@@ -390,6 +393,13 @@ class TCopter(Unit):
         
         self.transport = Transport([0, 1], 1, [])
 
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
+
 
 class BCopter(Unit):
     def __init__(self, owner=0):
@@ -405,6 +415,13 @@ class BCopter(Unit):
         self.move_type = 4
         
         self.ammo = 6
+    
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
         
         
 class Fighter(Unit):
@@ -421,6 +438,13 @@ class Fighter(Unit):
         self.move_type = 4
         
         self.ammo = 9
+    
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 class Bomber(Unit):
@@ -437,7 +461,14 @@ class Bomber(Unit):
         self.move_type = 4
         
         self.ammo = 9
-        
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
+
         
 class Stealth(Unit):
     def __init__(self, owner=0):
@@ -455,7 +486,14 @@ class Stealth(Unit):
         self.ammo = 9
         
         self.can_hide = True
-        
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
+
 
 # =============================================================================
 # Sea
@@ -476,7 +514,12 @@ class BlackBoat(Unit):
         
         self.transport = Transport([0, 1], 2, [])
         
-        # Should the repair be implemented as an attack?
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 class Lander(Unit):
@@ -493,6 +536,13 @@ class Lander(Unit):
         self.move_type = 6
         
         self.transport = Transport(list(range(0, 13)), 2, [])
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 class Cruiser(Unit):
@@ -512,7 +562,14 @@ class Cruiser(Unit):
         
         self.transport = Transport([13, 14], 2, [])
         
-        
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
+
+
 class Sub(Unit):
     def __init__(self, owner=0):
         super().__init__()
@@ -529,6 +586,13 @@ class Sub(Unit):
         self.ammo = 6
         
         self.can_hide = True
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 class Battleship(Unit):
@@ -548,6 +612,13 @@ class Battleship(Unit):
         self.direct = False
         self.min_range = 2
         self.max_range = 6
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 class Carrier(Unit):
@@ -569,6 +640,13 @@ class Carrier(Unit):
         self.max_range = 8
         
         self.transport = Transport([13, 14, 15, 16, 17], 2, [])
+
+    def daily_drain(self):
+        self.fuel -= self.daily_drain
+        if self.fuel <= 0:
+            return False
+        else:
+            return True
 
 
 ARCHETYPES = [
@@ -648,3 +726,4 @@ UNIT_NAMES = [
     "Sub",        #21 /
     "Battleship", #22 /
     "Carrier"]    #23 /
+       

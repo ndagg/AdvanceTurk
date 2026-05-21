@@ -4,23 +4,26 @@ Created on Tue May 20 17:27:30 2025
 
 @author: ndagg
 """
+from src.gameObjects.units import Unit
+from src.gameObjects.cos import CO
 
 def round_partial(value: float, resolution: float):
     return round(value / resolution) * resolution
 
 def calc_damage(
-        a_unit: object, 
-        d_unit: object,
-        a_terrain: int, 
+        a_unit: Unit,
+        d_unit: Unit,
+        a_co: CO,
+        d_co: CO,
+        a_terrain: int,
         d_terrain: int,
-        a_co: object, 
-        d_co: object,
+        counter: bool
         ) -> list[int]:
     """
     Calculate the damage dealt range of an attack
     """
     # Get attack and defence values from COs
-    attack_high, attack_low = a_co.attack_calculator(a_unit=a_unit, d_unit=d_unit, a_terrain=a_terrain)
+    attack_high, attack_low = a_co.attack_calculator(a_unit, d_unit, a_terrain, counter)
     unit_defence = d_co.defence_calculator(a_unit, d_unit, d_terrain)
 
     damage_high = (

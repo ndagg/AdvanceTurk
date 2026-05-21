@@ -109,10 +109,11 @@ def add_edge_labels(graph, ax, key):
     return ax
     
     
-def plot_map_image(base_map, ax=None):
+def plot_map_image(base_map, building_dict, ax=None):
     sprites = Image.open("images/spritesheet_buildings.png")
     sprites = np.array(sprites)
     
+    # Set up base image and sprites
     img_list = []
     height = TILEPX
     start = 0
@@ -128,20 +129,42 @@ def plot_map_image(base_map, ax=None):
     img_dims[:2] *= TILEPX
     
     img = np.tile(img_list[0], base_map.dims[::-1] + [1])
+
+    # Prepare building dict and coloured buildings
+    img_list_red = []
+    img_list_blue = []
+    for i in img_list:
+        # Do not modify initial img_list
+        k = i + 0
+        j = i + 0
+        k[:, :, [1,2]] //=2
+        j[:, :, [0,1]] //=2
+        k[:, :, [1,2]] += 20
+        j[:, :, [0,1]] += 20
+        img_list_red.append(k)
+        img_list_blue.append(j)
     
-    for x, col in enumerate(base_map.terrain_arr):
-        x *= TILEPX
-        for y, terrain in enumerate(col):
-            y *= TILEPX
-            h = img_list[terrain].shape[0]
+    for x_val, col in enumerate(base_map.terrain_arr):
+        x = x_val * TILEPX
+        for y_val, terrain in enumerate(col):
+            y = y_val * TILEPX
+            terrain_img = img_list[terrain]
+            h = terrain_img.shape[0]
+            location = loc_2_gloc((x_val, y_val), base_map.dims)
+            if location in building_dict and building_dict[location].owner is not None:
+                team = building_dict[location].owner
+                if team:
+                    terrain_img = img_list_blue[terrain]
+                else:
+                    terrain_img = img_list_red[terrain]
             if h == 20:
                 y -= 4
                 if y == -4:
                     img[0: TILEPX, x: x+TILEPX] = alpha_blend(
-                        img_list[terrain][4:], img[0: TILEPX, x: x+TILEPX])
+                        terrain_img[4:], img[0: TILEPX, x: x+TILEPX])
                     continue
             img[y: y+h, x: x+TILEPX] = alpha_blend(
-                img_list[terrain], img[y: y+h, x: x+TILEPX])
+                terrain_img, img[y: y+h, x: x+TILEPX])
     
     if ax is None:
         fig, ax = plt.subplots()
@@ -177,3 +200,44 @@ def plot_units_on_map(units, ax):
     
     ax.imshow(img._A)
     return ax
+
+
+def plot_glocs_on_map(ax, dims):
+    """
+    Add text labels showing 1-dimensional grid indices to each tile on the map.
+    
+    For a grid with dimensions (rows, cols), the index for tile (row, col) 
+    is calculated as: row * cols + col
+    
+    Args:
+        ax: matplotlib axis with the map image
+        dims: tuple of (rows, cols) representing grid dimensions
+    """
+    rows, cols = dims
+    
+    for row in range(rows):
+        for col in range(cols):
+            # Calculate 1-dimensional index
+            index = row * cols + col
+            
+            # Calculate pixel position (center of tile)
+            x = col * TILEPX + TILEHF
+            y = row * TILEPX + TILEHF
+            
+            # Add text label at the center of the tile
+            ax.text(x, y, str(index), 
+                   fontsize=6, 
+                   ha='center', 
+                   va='center',
+                   color='white',
+                   weight='bold',
+                   alpha=0.7,
+                #    bbox=dict(boxstyle='round,pad=0.3', 
+                #             facecolor='black', 
+                #             edgecolor='white', 
+                #             linewidth=0.5,
+                #             alpha=0.7)
+                            )
+    
+    return ax
+    

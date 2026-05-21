@@ -124,8 +124,22 @@ class GameReader:
             id = int(p["players_id"]) - self.min_id
             self.ids.append(id)
             co = BlankCO(id)
+
+            co.co_power_cost = p["players_co_max_power"]
+            co.super_power_cost = p["players_co_max_spower"]
             co.power_meter = p["players_co_power"]
+            power = p["players_co_power_on"]
+            if power == "S":
+                co.super_power_active = True
+            elif power == "Y":
+                co.co_power_active = True
+
+            co.funds = p["players_funds"]
+            for i in range(p["towers"]):
+                co.add_com_tower()
             players.append(Player(id, None, co))
+
+        players.sort(key=lambda x: x.player_number)
         return players
 
     def generate_unit_lists(self) -> list[Unit]:
@@ -136,8 +150,9 @@ class GameReader:
         unit_lists = [[] for i in range(len(self.ids))]
 
         for k, v in self.unit_dict.items():
+            owner = int(v["units_players_id"]) - self.min_id
             unit = UNIT_NAMES.index(v["units_name"])
-            unit = UNITS[unit]()
+            unit = UNITS[unit](owner)
             unit.fuel = v["units_fuel"]
             unit.hidden = v["units_sub_dive"] != "N"
             if unit.id not in [0, 2]:  # Inf and Recon has infinite ammo
@@ -146,9 +161,7 @@ class GameReader:
             unit.vhp = v["units_hit_points"]
             if unit.vhp < 10:
                 unit.hp = unit.vhp * 10 - 5  # Assumes unit is at mid-point of hp bracket
-            unit.active = bool(v["units_moved"])
-            owner = int(v["units_players_id"]) - self.min_id
-            unit.owner = owner
+            unit.active = not bool(v["units_moved"])
             # TODO - include transports
 
             unit_lists[owner].append(unit)

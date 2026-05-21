@@ -5,7 +5,7 @@ Created on Sun May 25 10:05:39 2025
 @author: ndagg
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import copy
 import logging
 
@@ -14,7 +14,7 @@ from src.gameUtils.aw_lists import (
     SECONDARY_ATTACK,
     TERRAIN_DEFENCE)
 
-from src.gameObjects.units import Unit, ARCHETYPES, UNITS
+from src.gameObjects.units import Unit, UNITS
 from src.gameObjects.actions import Action, SuperPower, COPower
 
 logger = logging.getLogger("mainlogger.cos")
@@ -39,6 +39,9 @@ class CO(ABC):
     funds_per_prop = 1000
     funds = 0
     num_income_buildings = 0
+    
+    repair_amount = 20
+    powers_used = 0
 
     def __init__(self, player_number: int):
         self.unit_factory_init()
@@ -50,9 +53,8 @@ class CO(ABC):
         """
         self.factory_list = []
         for unit in UNITS:
-            unit = unit(self.player_number)
+            unit = unit()
             self.factory_list.append(unit)
-            
     
     def unit_factory(self, unit_id: int) -> Unit:
         """
@@ -65,6 +67,9 @@ class CO(ABC):
         """
         Increase the CO power charge when taking damage
         """
+        if self.co_power_active or self.super_power_active:
+            return
+        
         if self.power_meter < self.super_power_cost:
             self.power_meter += amount
             if self.power_meter > self.super_power_cost:
@@ -84,26 +89,42 @@ class CO(ABC):
         """
         Apply all default effects of a power to the gameboard
         """
+        self.co_attack = [i + 10 for i in self.co_attack]
+        self.co_defence = [i + 10 for i in self.co_defence]
         self.co_power_active = True
         self.power_meter -= self.co_power_cost
+        if self.powers_used < 10:
+            self.co_power_cost *= 1.2
+            self.super_power_cost *= 1.2
+            self.powers_used += 1
         
-    def end_co_power(self, gamestate):
+    def end_co_power(self, gamestate: object):
         """
         Remove all default temporary effects of a power from the gameboard
         """
+        self.co_attack = [i - 10 for i in self.co_attack]
+        self.co_defence = [i - 10 for i in self.co_attack]
         self.co_power_active = False
     
     def apply_super_power(self, gamestate: object):
         """
         Apply all default effects of a super to the gameboard
         """
+        self.co_attack = [i + 10 for i in self.co_attack]
+        self.co_defence = [i + 10 for i in self.co_defence]
         self.super_power_active = True
         self.power_meter = 0
+        if self.powers_used < 10:
+            self.co_power_cost *= 1.2
+            self.super_power_cost *= 1.2
+            self.powers_used += 1
         
     def end_super_power(self, gamestate: object):
         """
         Remove all default temporary effects of a super from the gameboard
         """
+        self.co_attack = [i - 10 for i in self.co_attack]
+        self.co_defence = [i - 10 for i in self.co_attack]
         self.super_power_active = False
         
     def add_com_tower(self):
@@ -111,16 +132,16 @@ class CO(ABC):
         Apply com tower bonus to all units
         """
         self.com_towers += 1
-        self.co_attack += 10
+        self.co_attack = [i + 10 for i in self.co_attack]
     
     def remove_com_tower(self):
         """
         Remove com tower bonus from all units
         """
         self.com_towers -= 1
-        self.co_attack -= 10
+        self.co_attack = [i - 10 for i in self.co_attack]
     
-    def attack_calculator(self, a_unit: Unit, d_unit: Unit, a_terrain: int) -> tuple[int]:
+    def attack_calculator(self, a_unit: Unit, d_unit: Unit, a_terrain: int, counter: bool) -> tuple[int]:
         """
         Calculate the default attack range during a combat
         """
@@ -128,10 +149,7 @@ class CO(ABC):
             weapon_attack = PRIMARY_ATTACK[a_unit.id][d_unit.id]
         else:
             weapon_attack = SECONDARY_ATTACK[a_unit.id][d_unit.id]
-        
         unit_attack = self.co_attack[a_unit.id]
-        if self.co_power_active or self.super_power_active:
-            unit_attack += 10
             
         attack_high = (
             weapon_attack
@@ -150,9 +168,6 @@ class CO(ABC):
         Calculate the default defence during a combat
         """
         unit_defence = self.co_defence[d_unit.id]
-        if self.co_power_active or self.super_power_active:
-            unit_defence += 10
-        
         defence = unit_defence + TERRAIN_DEFENCE[d_terrain] * d_unit.vhp
         return defence
     
