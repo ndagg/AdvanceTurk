@@ -72,7 +72,7 @@ def main():
     # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
     max_depth = 3
     best_actions = {}
-    score, moves = minimax(gamestate, player1, max_depth, 0, PureValueEvaluator())#, best_actions)
+    score, moves = minimax(gamestate, player1, max_depth, 0, PureValueEvaluator(player1.player_number))#, best_actions)
     print(f"bot complete: {score}, {moves}")
 
 
