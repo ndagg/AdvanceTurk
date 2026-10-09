@@ -70,8 +70,9 @@ def main():
     # ax = plot_glocs_on_map(ax, gmap.dims)
     # ax = plot_moves(gamestate, tank, gmap.dims, ax)
     # ax = plot_units_on_map(unit_lists[0] + unit_lists[1], ax)
-
-    score, moves = minimax(gamestate, player1, 3, 0, PureValueEvaluator(), {})
+    max_depth = 3
+    best_actions = {}
+    score, moves = minimax(gamestate, player1, max_depth, 0, PureValueEvaluator(player1.player_number))#, best_actions)
     print(f"bot complete: {score}, {moves}")
 
 
